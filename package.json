@@ -1,12 +1,13 @@
 {
-  "name": "yoquet-frontend",
-  "private": true,
-  "version": "0.0.1",
-  "type": "module",
+  "name": "yoquet_disenos_frontend",
+  "version": "1.0.0",
+  "homepage": "https://omargonza.github.io/yoquet_disenos_frontend/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "axios": "^1.7.2",
@@ -21,6 +22,7 @@
     "@tailwindcss/postcss": "^4.1.14",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.14",
     "vite": "^5.4.0"
