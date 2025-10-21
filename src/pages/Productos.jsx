@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import api from "../utils/api";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
@@ -7,7 +8,14 @@ import { useToast } from "../context/ToastContext";
 
 // === Íconos SVG (sin dependencias externas) ===
 const IconGrid = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <rect x="3" y="3" width="7" height="7" />
     <rect x="14" y="3" width="7" height="7" />
     <rect x="3" y="14" width="7" height="7" />
@@ -15,7 +23,14 @@ const IconGrid = () => (
   </svg>
 );
 const IconList = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <line x1="8" y1="6" x2="21" y2="6" />
     <line x1="8" y1="12" x2="21" y2="12" />
     <line x1="8" y1="18" x2="21" y2="18" />
@@ -25,7 +40,14 @@ const IconList = () => (
   </svg>
 );
 const IconFilter = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <polygon points="3 4 21 4 14 14 14 21 10 19 10 14 3 4" />
   </svg>
 );
@@ -56,13 +78,14 @@ export default function Productos() {
   const navigate = useNavigate();
   const cartRef = useRef(null);
 
-  const backendURL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+  // const backendURL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
   // 🚀 Carga de productos con caché local
   useEffect(() => {
     const cachedProducts = localStorage.getItem("productos_cache");
     const cachedTime = localStorage.getItem("productos_cache_time");
-    const isRecent = cachedTime && Date.now() - parseInt(cachedTime, 10) < 3600 * 1000; // 1h
+    const isRecent =
+      cachedTime && Date.now() - parseInt(cachedTime, 10) < 3600 * 1000; // 1h
 
     if (cachedProducts && isRecent) {
       setProductos(JSON.parse(cachedProducts));
@@ -72,12 +95,16 @@ export default function Productos() {
     const fetchData = async () => {
       try {
         const [catRes, prodRes] = await Promise.all([
-          axios.get(`${backendURL}/api/categorias/`),
-          axios.get(`${backendURL}/api/productos/`),
+          api.get("/api/categorias/"),
+          api.get("/api/productos/"),
         ]);
 
-        const catData = Array.isArray(catRes.data) ? catRes.data : catRes.data.results || [];
-        const prodData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.results || [];
+        const catData = Array.isArray(catRes.data)
+          ? catRes.data
+          : catRes.data.results || [];
+        const prodData = Array.isArray(prodRes.data)
+          ? prodRes.data
+          : prodRes.data.results || [];
 
         setCategorias(catData);
         setProductos(prodData);
@@ -104,7 +131,10 @@ export default function Productos() {
 
     const imgRect = imgEl.getBoundingClientRect();
     const cartRect = cartRef.current.getBoundingClientRect();
-    const fly = { x: cartRect.left - imgRect.left, y: cartRect.top - imgRect.top };
+    const fly = {
+      x: cartRect.left - imgRect.left,
+      y: cartRect.top - imgRect.top,
+    };
 
     setFlyImage({
       src: producto.imagen,

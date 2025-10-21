@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useCarrito } from "../context/CarritoContext";
 
