@@ -1,5 +1,5 @@
-import { HashRouter as Router } from "react-router-dom";
 
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Despedida from "./components/Despedida";
 import Home from "./pages/Home";
@@ -46,12 +46,12 @@ export default function App() {
           <>
             <PageTransition>
               <Router>
-                <Router path="/" element={<Home />} />
-                <Router path="/login" element={<Login />} />
-                <Router path="/productos" element={<Productos />} />
-                <Router path="/productos/:id" element={<ProductoDetalle />} />
-                <Router path="/carrito" element={<Carrito />} />
-                <Router path="/despedida" element={<Despedida />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/productos" element={<Productos />} />
+                <Route path="/productos/:id" element={<ProductoDetalle />} />
+                <Route path="/carrito" element={<Carrito />} />
+                <Route path="/despedida" element={<Despedida />} />
                 <Router path="/checkout" element={<Checkout />} />
                 <Router path="/confirmacion" element={<Confirmacion />} />
               </Router>
