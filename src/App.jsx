@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter as Router } from "react-router-dom";
+
 import { AnimatePresence } from "framer-motion";
 import Despedida from "./components/Despedida";
 import Home from "./pages/Home";
@@ -37,23 +38,23 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter basename={basename}>
+    <Router basename={basename}>
       <AnimatePresence mode="wait">
         {showSplash ? (
           <SplashScreen onFinish={() => setShowSplash(false)} />
         ) : (
           <>
             <PageTransition>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/productos" element={<Productos />} />
-                <Route path="/productos/:id" element={<ProductoDetalle />} />
-                <Route path="/carrito" element={<Carrito />} />
-                <Route path="/despedida" element={<Despedida />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/confirmacion" element={<Confirmacion />} />
-              </Routes>
+              <Router>
+                <Router path="/" element={<Home />} />
+                <Router path="/login" element={<Login />} />
+                <Router path="/productos" element={<Productos />} />
+                <Router path="/productos/:id" element={<ProductoDetalle />} />
+                <Router path="/carrito" element={<Carrito />} />
+                <Router path="/despedida" element={<Despedida />} />
+                <Router path="/checkout" element={<Checkout />} />
+                <Router path="/confirmacion" element={<Confirmacion />} />
+              </Router>
             </PageTransition>
 
             <CartButton />
@@ -85,6 +86,6 @@ export default function App() {
           </>
         )}
       </AnimatePresence>
-    </BrowserRouter>
+    </Router>
   );
 }
