@@ -1,4 +1,4 @@
-
+// ...existing code...
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Despedida from "./components/Despedida";
@@ -14,11 +14,8 @@ import SplashScreen from "./components/SplashScreen";
 import PageTransition from "./components/PageTransition";
 import { useAmbient } from "./context/AmbientContext";
 import { useState, useEffect } from "react";
+// ...existing code...
 
-/**
- * 🔧 Detecta automáticamente si estás en modo producción (GitHub Pages)
- * o en desarrollo local. Así no tenés que cambiar nada manualmente.
- */
 const isProd = import.meta.env.MODE === "production";
 const basename = isProd ? "/yoquet_disenos_frontend" : "/";
 
@@ -45,16 +42,16 @@ export default function App() {
         ) : (
           <>
             <PageTransition>
-              <Router>
+              <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/productos" element={<Productos />} />
                 <Route path="/productos/:id" element={<ProductoDetalle />} />
                 <Route path="/carrito" element={<Carrito />} />
                 <Route path="/despedida" element={<Despedida />} />
-                <Router path="/checkout" element={<Checkout />} />
-                <Router path="/confirmacion" element={<Confirmacion />} />
-              </Router>
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/confirmacion" element={<Confirmacion />} />
+              </Routes>
             </PageTransition>
 
             <CartButton />
@@ -89,3 +86,4 @@ export default function App() {
     </Router>
   );
 }
+// ...existing code...

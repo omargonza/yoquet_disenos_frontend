@@ -1,16 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Detecta el modo
+// Detecta el modo actual
 const mode = process.env.NODE_ENV || "development";
 const isProd = mode === "production";
 
-// 🔧 URL base para GitHub Pages
-// (tiene que coincidir con el nombre del repositorio)
+// 🔧 CONFIGURACIÓN
 export default defineConfig({
   plugins: [react()],
 
-  base: isProd ? "/yoquet_disenos_frontend/" : "/",
+  // 👉 Para Render o cualquier hosting estático: siempre base './'
+  // (GitHub Pages necesita la ruta del repo, Render no)
+  base: isProd ? "./" : "/",
 
   server: {
     port: 5173,
@@ -24,8 +25,9 @@ export default defineConfig({
     },
   },
 
-  // 🔍 Muestra errores reales en consola (no minificados)
+  // 🔍 Mostrar errores legibles en modo build
   build: {
     sourcemap: true,
   },
 });
+
