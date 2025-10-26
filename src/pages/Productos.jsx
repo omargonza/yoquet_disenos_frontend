@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
-
+import axios from "axios";
 // === Íconos SVG (sin dependencias externas) ===
 const IconGrid = () => (
   <svg
@@ -78,7 +78,8 @@ export default function Productos() {
   const navigate = useNavigate();
   const cartRef = useRef(null);
 
-  // const backendURL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
 
   // 🚀 Carga de productos con caché local
   useEffect(() => {
@@ -94,20 +95,22 @@ export default function Productos() {
 
     const fetchData = async () => {
       try {
-        const [catRes, prodRes] = await Promise.all([
-          api.get("/api/categorias/"),
-          api.get("/api/productos/"),
+        const [prodRes, catRes] = await Promise.all([
+          axios.get(`${backendURL}api/productos/`),
+          axios.get(`${backendURL}api/categorias/`),
         ]);
 
-        const catData = Array.isArray(catRes.data)
-          ? catRes.data
-          : catRes.data.results || [];
         const prodData = Array.isArray(prodRes.data)
           ? prodRes.data
           : prodRes.data.results || [];
 
-        setCategorias(catData);
+        const catData = Array.isArray(catRes.data)
+          ? catRes.data
+          : catRes.data.results || [];
+
         setProductos(prodData);
+        setCategorias(catData);
+
         localStorage.setItem("productos_cache", JSON.stringify(prodData));
         localStorage.setItem("productos_cache_time", Date.now().toString());
       } catch (error) {
@@ -151,7 +154,7 @@ export default function Productos() {
 
   // 🎯 Filtro
   const productosFiltrados = categoriaSeleccionada
-    ? productos.filter((p) => p.categoria === categoriaSeleccionada.nombre)
+    ? productos.filter((p) => p.categoria?.id === categoriaSeleccionada.id)
     : productos;
 
   if (loading)
@@ -252,46 +255,50 @@ export default function Productos() {
               key={producto.id}
               variants={item}
               whileHover={{ scale: 1.03 }}
-              className={`producto-card relative group bg-[#fffefb] border border-[#e7dcc5] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 ${
-                vista === "list"
-                  ? "flex items-center gap-6 p-4 hover:-translate-y-1"
-                  : "hover:-translate-y-2"
+              onClick={() => navigate(`/productos/${producto.id}`)}
+              className={`card-warm relative group overflow-hidden cursor-pointer ${
+                vista === "list" ? "flex items-center gap-6 p-4" : "p-4"
               }`}
             >
               <div
-                className={`relative cursor-pointer ${
-                  vista === "list" ? "w-48 h-48 flex-shrink-0" : ""
-                }`}
-                onClick={() => navigate(`/productos/${producto.id}`)}
+                className={`relative ${
+                  vista === "list" ? "w-48 h-48 flex-shrink-0" : "w-full h-64"
+                } overflow-hidden rounded-[22px]`}
               >
                 <img
                   loading="lazy"
                   src={producto.imagen}
                   alt={producto.nombre}
-                  className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
                 />
               </div>
 
               <div
-                className={`flex flex-col ${
-                  vista === "list" ? "flex-1 justify-center pr-4" : "p-5 gap-2"
+                className={`flex flex-col justify-between ${
+                  vista === "list" ? "flex-1 pr-4" : "mt-4"
                 }`}
               >
-                <h3 className="text-lg font-semibold text-[#4b3f2f] truncate">
+                <h3 className="text-lg font-semibold text-[var(--color-cafe)] truncate font-[Playfair_Display]">
                   {producto.nombre}
                 </h3>
-                <p className="text-sm text-[#7a6a4f] line-clamp-2 min-h-[2.5em]">
+
+                <p className="text-sm text-[#7a6a4f] line-clamp-2">
                   {producto.descripcion}
                 </p>
+
                 <div className="flex justify-between items-center mt-3">
-                  <span className="text-[#b08c4e] font-bold text-lg">
+                  <span className="text-[var(--color-dorado-profundo)] font-bold text-lg tracking-wide">
                     ${producto.precio}
                   </span>
+
                   <motion.button
                     whileHover={{ scale: 1.07 }}
                     whileTap={{ scale: 0.93 }}
-                    onClick={(e) => handleAddToCart(producto, e)}
-                    className="px-4 py-2 rounded-full bg-gradient-to-r from-[#d4b978] to-[#b9994b] text-[#3f2e13] font-semibold text-sm shadow hover:shadow-lg transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart(producto, e);
+                    }}
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-[#d4b978] to-[#b9994b] text-[#3f2e13] font-medium text-sm shadow hover:shadow-lg transition-all"
                   >
                     Agregar
                   </motion.button>
@@ -307,6 +314,7 @@ export default function Productos() {
         {flyImage && (
           <motion.img
             src={flyImage.src}
+            alt="Flying to cart"
             initial={{
               position: "fixed",
               top: flyImage.y,

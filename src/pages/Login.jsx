@@ -22,7 +22,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await axios.post(`${backendURL}/api/auth/login/`, {
+      const res = await axios.post(`${backendURL}api/auth/login/`, {
         username,
         password,
       });

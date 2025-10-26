@@ -7,7 +7,7 @@ import { CarritoProvider } from "./context/CarritoContext";
 import { AmbientProvider } from "./context/AmbientContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
+  <BrowserRouter  basename="/">
     <AmbientProvider>
       <CarritoProvider>
         <ToastProvider>

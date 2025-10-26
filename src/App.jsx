@@ -35,7 +35,7 @@ export default function App() {
   }, []);
 
   return (
-    <Router basename={basename}>
+    
       <AnimatePresence mode="wait">
         {showSplash ? (
           <SplashScreen onFinish={() => setShowSplash(false)} />
@@ -83,7 +83,7 @@ export default function App() {
           </>
         )}
       </AnimatePresence>
-    </Router>
+    
   );
 }
 // ...existing code...
