@@ -14,6 +14,9 @@ export default function Home() {
 
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
+    
+  const mediaBase =
+   import.meta.env.VITE_MEDIA_BASE;
 
   // ✅ Cargar destacados
   useEffect(() => {
@@ -95,7 +98,7 @@ export default function Home() {
     >
       {/* LOGO */}
       <motion.img
-        src={`${backendURL}media/productos/souvenir/catalogo-diego-1-1.webp`}
+        src={`${mediaBase}/souvenir/catalogo-diego-1-1.webp`}
         alt="Yoquet Diseños Logo"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 0.9, scale: 1 }}
