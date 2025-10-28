@@ -16,6 +16,13 @@ export default function Login() {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
+    
+  const mediaBase =
+    import.meta.env.VITE_MEDIA_BASE ||
+    "https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet";
+
+ 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,132 +57,139 @@ export default function Login() {
     }
   };
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-[#faf7f1] via-[#f4efe6] to-[#f9f4e9]">
-      {/* COLUMNA IZQUIERDA — FORMULARIO */}
-      <div className="flex flex-col justify-center w-full md:w-1/2 px-6 sm:px-12 lg:px-20 py-10 bg-white/60 backdrop-blur-md border-r border-[#e8e0cf]/40 shadow-inner">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-sm mx-auto"
-        >
-          {/* LOGO */}
-          <motion.img
-            src={`${backendURL}/media/productos/souvenir/catalogo-diego-1-1.webp`}
-            alt="Yoquet Diseños Logo"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-14 h-14 mx-auto mb-4 rounded-lg object-cover shadow-sm ring-2 ring-[#e2c78c]/50"
-          />
+return (
+  <div className="flex flex-col md:flex-row min-h-screen bg-[#0d0b0c] relative overflow-hidden text-white">
+    {/* ✨ Confites animados */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.35 }}
+      transition={{ duration: 1.2 }}
+      className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,102,179,0.35),transparent_70%),radial-gradient(circle_at_80%_70%,rgba(255,216,90,0.35),transparent_70%),radial-gradient(circle_at_50%_90%,rgba(66,226,184,0.35),transparent_70%),radial-gradient(circle_at_30%_80%,rgba(139,92,246,0.3),transparent_70%)] blur-3xl"
+    />
 
-          {/* TITULO */}
-          <h2 className="text-center text-2xl font-semibold text-[#4b3f2f] mb-1">
-            Bienvenido a{" "}
-            <span className="text-[#b08c4e] font-bold">Yoquet Diseños</span>
-          </h2>
-          <p className="text-center text-[#7a6a4f] mb-8 text-sm">
-            Creaciones únicas, hechas con pasión ✨
-          </p>
-
-          {/* FORMULARIO */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#5c4e35] mb-1">
-                Usuario o Email
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 bg-[#fffdf9] border border-[#e7dcc5] rounded-md focus:ring-2 focus:ring-[#cbb278] focus:border-[#cbb278] text-[#3f3524] outline-none transition text-sm"
-                placeholder="usuario@ejemplo.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#5c4e35] mb-1">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#fffdf9] border border-[#e7dcc5] rounded-md focus:ring-2 focus:ring-[#cbb278] focus:border-[#cbb278] text-[#3f3524] outline-none transition text-sm"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {/* BOTÓN DE LOGIN */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              type="submit"
-              disabled={loading}
-              className="relative w-full flex justify-center items-center gap-2 py-2 rounded-md font-medium text-[#3f2e13] shadow-md text-sm overflow-hidden group"
-            >
-              <span className="z-10">
-                {loading ? "Cargando..." : "Iniciar Sesión"}
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-[#d4b978] via-[#e8d29a] to-[#b9994b] group-hover:animate-shine"></span>
-            </motion.button>
-          </form>
-
-          {/* ERROR */}
-          {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-[#a15234] bg-[#fff6f4] border border-[#e2b9a8] rounded-md text-sm text-center py-2 mt-4"
-            >
-              {error}
-            </motion.p>
-          )}
-
-          {/* FOOTER */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-[#7a6a4f]">
-              ¿Olvidaste tu contraseña?{" "}
-              <a
-                href="#"
-                className="text-[#b58b49] hover:text-[#9c7c41] font-medium"
-              >
-                Recuperar
-              </a>
-            </p>
-            <p className="text-xs text-[#b2a78c] mt-3">
-              © {new Date().getFullYear()} Yoquet Diseños
-            </p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* COLUMNA DERECHA — IMAGEN DECORATIVA */}
+    {/* COLUMNA IZQUIERDA — FORMULARIO */}
+    <div className="flex flex-col justify-center w-full md:w-1/2 px-8 sm:px-14 lg:px-20 py-12 bg-black/50 backdrop-blur-lg border-r border-white/10 shadow-inner relative z-10">
       <motion.div
-        initial={{ opacity: 0, x: 60 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1 }}
-        className="hidden md:flex w-1/2 items-center justify-center relative overflow-hidden"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full max-w-sm mx-auto"
       >
-        <img
-          src={`${backendURL}/media/productos/souvenir/catalogo-diego-1-1.webp`}
-          alt="Imagen decorativa Yoquet Diseños"
-          className="absolute inset-0 w-full h-full object-cover brightness-95 contrast-105 blur-[1.5px]"
+        {/* LOGO */}
+        <motion.img
+          src={`${mediaBase}/productos/logo-yoquet.png`}
+          alt="Yoquet Diseños Logo"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="w-40 h-auto mx-auto mb-6 object-contain drop-shadow-[0_4px_10px_rgba(255,216,90,0.6)]"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#d4b978]/50 via-[#f7f1e5]/20 to-[#c4aa70]/30"></div>
 
-        <div className="relative z-10 text-center text-[#fffaf0] drop-shadow-md px-10">
-          <h3 className="text-3xl font-semibold mb-2 tracking-tight">
-            Elegancia Artesanal
-          </h3>
-          <p className="text-base text-[#fdf7e9]">
-            Detalles únicos, pensados con amor 💛
+        {/* TÍTULO */}
+        <h2 className="text-center text-3xl font-bold mb-1 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] text-transparent bg-clip-text drop-shadow-sm">
+          Iniciá sesión
+        </h2>
+        <p className="text-center text-[#e9e4dc] mb-8 text-sm italic">
+          Bienvenido a <span className="text-[#ffd85a] font-semibold">Yoquet Diseños</span> 🎉
+        </p>
+
+        {/* FORMULARIO */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-[#f5e6d0] mb-1">
+              Usuario o Email
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-3 py-2 bg-[#1a181a]/60 border border-[#ffd85a]/40 rounded-md focus:ring-2 focus:ring-[#ff66b3] focus:border-[#ffd85a] text-[#fffaf2] outline-none transition text-sm placeholder-[#c9bca8]"
+              placeholder="usuario@ejemplo.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#f5e6d0] mb-1">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 bg-[#1a181a]/60 border border-[#ffd85a]/40 rounded-md focus:ring-2 focus:ring-[#ff66b3] focus:border-[#ffd85a] text-[#fffaf2] outline-none transition text-sm placeholder-[#c9bca8]"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          {/* BOTÓN */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            type="submit"
+            disabled={loading}
+            className="relative w-full flex justify-center items-center gap-2 py-2 rounded-md font-semibold text-white text-sm overflow-hidden group shadow-md"
+          >
+            <span className="z-10">
+              {loading ? "Cargando..." : "Iniciar Sesión"}
+            </span>
+            <span className="absolute inset-0 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] group-hover:opacity-90 transition-all"></span>
+          </motion.button>
+        </form>
+
+        {/* ERROR */}
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-[#ff8fa3] bg-[#2b1a1d]/70 border border-[#ff66b3]/30 rounded-md text-sm text-center py-2 mt-4"
+          >
+            {error}
+          </motion.p>
+        )}
+
+        {/* FOOTER */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-[#e9e4dc]">
+            ¿Olvidaste tu contraseña?{" "}
+            <a
+              href="#"
+              className="text-[#ff66b3] hover:text-[#ffd85a] font-medium"
+            >
+              Recuperar
+            </a>
+          </p>
+          <p className="text-xs text-[#c1b8a4] mt-3">
+            © {new Date().getFullYear()} Yoquet Diseños
           </p>
         </div>
       </motion.div>
     </div>
-  );
+
+    {/* COLUMNA DERECHA — DECORACIÓN */}
+    <motion.div
+      initial={{ opacity: 0, x: 60 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 1 }}
+      className="hidden md:flex w-1/2 items-center justify-center relative overflow-hidden"
+    >
+      <img
+        src={`${mediaBase}/productos/fondo-festivo.webp`}
+        alt="Fondo festivo"
+        className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-screen"
+      />
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#000]/70 via-transparent to-[#000]/60"></div>
+
+      <div className="relative z-10 text-center text-[#fffaf0] drop-shadow-lg px-10">
+        <h3 className="text-3xl font-bold mb-2 tracking-tight bg-gradient-to-r from-[#ffd85a] via-[#ff66b3] to-[#42e2b8] bg-clip-text text-transparent">
+          ✨ Creatividad sin límites
+        </h3>
+        <p className="text-base text-[#fdf7e9]">
+          Cada diseño, una fiesta de color 🎊
+        </p>
+      </div>
+    </motion.div>
+  </div>
+);
 }

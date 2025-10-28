@@ -1,5 +1,5 @@
-/* === Tipografías Globales === */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* === Fuentes modernas === */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 /* === Tailwind === */
 @import "tailwindcss";
@@ -7,36 +7,75 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Paleta Warm Handmade === */
+/* === Paleta Festiva === */
 :root {
-  --color-crema: #faf7f1;
-  --color-marfil: #fffdf9;
-  --color-beige: #e7dcc5;
-  --color-dorado-suave: #cbb278;
-  --color-dorado-profundo: #b08c4e;
-  --color-cafe: #4b3f2f;
+  --color-rosa: #ff66b3;
+  --color-dorado: #ffd85a;
+  --color-turquesa: #42e2b8;
+  --color-violeta: #8b5cf6;
+  --color-crema: #fffaf6;
+  --color-chocolate: #3d2b1f;
 }
 
-/* === Fondo & Tipografía base === */
+/* === Fondo general === */
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--color-crema);
-  color: var(--color-cafe);
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(
+    circle at 20% 30%, 
+    rgba(255,102,179,0.15) 0%, 
+    transparent 70%
+  ), radial-gradient(
+    circle at 80% 70%, 
+    rgba(255,216,90,0.15) 0%, 
+    transparent 70%
+  ), radial-gradient(
+    circle at 50% 90%, 
+    rgba(66,226,184,0.15) 0%, 
+    transparent 70%
+  ), var(--color-crema);
+  color: var(--color-chocolate);
+  overflow-x: hidden;
 }
 
-/* Títulos cálidos y elegantes */
+/* === Títulos con estilo de marca === */
 h1, h2, h3, h4 {
   font-family: 'Playfair Display', serif;
   font-weight: 600;
   letter-spacing: -0.5px;
 }
 
-/* === Shine Suave (un solo versión limpia) === */
+/* === Botones vibrantes === */
+.btn-festivo {
+  @apply px-5 py-2 rounded-full font-semibold text-white shadow-md transition-all relative overflow-hidden;
+  background: linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa));
+}
+.btn-festivo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* === Tarjetas con energía === */
+.card-festive {
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(255,247,236,0.95) 100%
+  );
+  border: 2px solid rgba(255,216,90,0.3);
+  border-radius: 24px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transition: all 0.45s ease;
+}
+.card-festive:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+}
+
+/* === Animación Shine === */
 @keyframes shine {
   0% { transform: translateX(-120%); }
   100% { transform: translateX(120%); }
 }
-
 .group-hover\:animate-shine::before {
   content: "";
   position: absolute;
@@ -44,28 +83,14 @@ h1, h2, h3, h4 {
   background: linear-gradient(
     120deg,
     rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.45) 45%,
+    rgba(255,255,255,0.55) 45%,
     rgba(255,255,255,0) 100%
   );
   transform: skewX(-20deg);
-  animation: shine 1.6s ease-in-out forwards;
+  animation: shine 1.5s ease-in-out forwards;
 }
 
-/* === Tarjetas estilo boutique cálido === */
-.card-warm {
-  background: var(--color-marfil);
-  border: 1px solid var(--color-beige);
-  border-radius: 26px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: all 0.45s ease;
-}
-
-.card-warm:hover {
-  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-  transform: translateY(-3px);
-}
-
-/* Ocultar scrollbar pero mantener scroll funcional */
+/* === Scroll oculto pero funcional === */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
@@ -73,6 +98,3 @@ h1, h2, h3, h4 {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-.scrollbar-none::-webkit-scrollbar { display: none; }
-.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
