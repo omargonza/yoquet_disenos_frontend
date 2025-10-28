@@ -15,8 +15,11 @@ export default function Home() {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
     
+    
+  // 🌤️ Base Cloudinary configurable
   const mediaBase =
-   import.meta.env.VITE_MEDIA_BASE;
+    import.meta.env.VITE_MEDIA_BASE ||
+    "https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet";
 
   // ✅ Cargar destacados
   useEffect(() => {
@@ -87,7 +90,7 @@ export default function Home() {
     navigate("/despedida");
   };
 
-  return (
+ return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -96,17 +99,20 @@ export default function Home() {
       bg-gradient-to-br from-[#faf7f1] via-[#f4efe6] to-[#f9f4e9]
       text-[#3f3524] font-serif overflow-hidden relative"
     >
-      {/* LOGO */}
+      {/* 🖼️ LOGO */}
       <motion.img
-        src={`${mediaBase}/souvenir/catalogo-diego-1-1.webp`}
+        src={`${mediaBase}/productos/catalogo-diego-1-1.webp`}
         alt="Yoquet Diseños Logo"
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.9, scale: 1 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1 }}
         className="w-28 h-28 mb-6 rounded-xl object-cover shadow-md ring-2 ring-[#e2c78c]/50"
+        onError={(e) => {
+          e.target.src = "https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet/productos/fallback.webp";
+        }}
       />
 
-      {/* TÍTULO */}
+      {/* 🪄 TÍTULO */}
       <motion.h1
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -125,7 +131,7 @@ export default function Home() {
         Donde la creatividad y la elegancia se encuentran 💫
       </motion.p>
 
-      {/* BOTONES SEGÚN LOGIN */}
+      {/* 👤 BOTONES LOGIN / LOGOUT */}
       {isLoggedIn ? (
         <>
           <motion.p
@@ -151,7 +157,7 @@ export default function Home() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              onClick={handleLogout}
+              onClick={() => navigate("/logout")}
               className="px-8 py-3 border border-[#d4b978] text-[#b08c4e] font-medium rounded-full shadow-sm hover:bg-[#f8f3e8] transition-all"
             >
               Cerrar sesión
@@ -176,8 +182,8 @@ export default function Home() {
         </>
       )}
 
-      {/* CARRUSEL DESTACADOS */}
-      {destacados.length > 0 && (
+      {/* 🧺 CARRUSEL DESTACADOS */}
+      {destacados?.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -189,11 +195,11 @@ export default function Home() {
           </h2>
 
           <div className="relative">
-            {/* Fade suave lateral */}
+            {/* Sombras laterales */}
             <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#faf7f1] to-transparent z-10"></div>
             <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#faf7f1] to-transparent z-10"></div>
 
-            {/* CARRUSEL */}
+            {/* Carrusel horizontal */}
             <div
               ref={scrollRef}
               className="flex gap-6 overflow-x-auto scrollbar-none pb-4 snap-x snap-mandatory"
@@ -203,15 +209,20 @@ export default function Home() {
                   key={p.id}
                   whileHover={{ scale: 1.04 }}
                   className="min-w-[280px] max-w-[280px] snap-start rounded-[24px] overflow-hidden
-            shadow-[0_6px_18px_rgba(0,0,0,0.08)]
-            bg-[#fffdf9] border border-[#e7dcc5]
-            hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)] transition-all duration-500 cursor-pointer"
+                    shadow-[0_6px_18px_rgba(0,0,0,0.08)]
+                    bg-[#fffdf9] border border-[#e7dcc5]
+                    hover:shadow-[0_10px_26px_rgba(0,0,0,0.12)]
+                    transition-all duration-500 cursor-pointer"
                   onClick={() => navigate(`/productos/${p.id}`)}
                 >
                   <img
                     src={p.imagen}
                     alt={p.nombre}
-                    className="w-full h-64 object-cover rounded-[20px] transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
+                    className="w-full h-64 object-cover rounded-[20px] transition-transform duration-[1400ms] ease-out hover:scale-[1.06]"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet/productos/fallback.webp";
+                    }}
                   />
                   <div className="p-4 text-left">
                     <h3 className="text-[#4b3f2f] font-semibold leading-tight">
@@ -228,7 +239,7 @@ export default function Home() {
         </motion.div>
       )}
 
-      {/* FONDO DECORATIVO */}
+      {/* ✨ FONDO DECORATIVO */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.25 }}
@@ -240,3 +251,4 @@ export default function Home() {
     </motion.div>
   );
 }
+
