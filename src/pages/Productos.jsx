@@ -96,8 +96,8 @@ export default function Productos() {
     const fetchData = async () => {
       try {
         const [prodRes, catRes] = await Promise.all([
-          axios.get(`${backendURL}api/productos/`),
-          axios.get(`${backendURL}api/categorias/`),
+          axios.get(`${backendURL}/api/productos/`),
+          axios.get(`${backendURL}/api/categorias/`),
         ]);
 
         const prodData = Array.isArray(prodRes.data)
