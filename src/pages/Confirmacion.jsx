@@ -6,8 +6,7 @@ export default function Confirmacion() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirigir automáticamente después de unos segundos
-    const timer = setTimeout(() => navigate("/despedida"), 4000);
+    const timer = setTimeout(() => navigate("/empaquetando"), 2000);
     return () => clearTimeout(timer);
   }, [navigate]);
 
@@ -16,88 +15,70 @@ export default function Confirmacion() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.5, ease: "easeOut" }}
-      className="relative min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-br from-[#fbf9f4] via-[#f6f1e8] to-[#f1e8da] text-[#3f3524] font-serif overflow-hidden"
+      transition={{ duration: 1 }}
+      className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c] text-[#f8f8f8] font-[Poppins] overflow-hidden"
     >
-      {/* ✨ Fondo luminoso con reflejos dorados */}
+      {/* ✨ Fondo con reflejo metálico */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
-        transition={{ duration: 2 }}
-        className="pointer-events-none -z-10 absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(212,185,120,0.25),transparent_70%),radial-gradient(circle_at_70%_70%,rgba(185,153,75,0.25),transparent_70%)] blur-[100px]"
+        className="absolute inset-0 pointer-events-none mix-blend-overlay"
+        animate={{
+          backgroundPosition: ["0% 50%", "100% 50%"],
+          opacity: [0.4, 0.8, 0.4],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(212,185,120,0.1), rgba(255,255,255,0.05))",
+          backgroundSize: "250% 250%",
+        }}
       />
 
-      {/* 🌿 Círculo dorado animado */}
+      {/* 🧾 Ticket */}
       <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: [0, 1.1, 1], opacity: [0, 1, 1] }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
-        className="absolute w-48 h-48 rounded-full bg-gradient-to-br from-[#d4b978] via-[#e8d29a] to-[#b9994b] blur-[60px]"
-      />
-
-      {/* 💫 Icono de confirmación */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
-        className="z-10 bg-white/70 backdrop-blur-md p-8 rounded-full border-4 border-[#e2c78c]/50 shadow-[0_0_30px_rgba(212,185,120,0.4)]"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative bg-white/80 backdrop-blur-xl text-[#3d2b1f] rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] w-[90%] max-w-md p-8 border border-[#e7dcc5]"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-20 h-20 text-[#b08c4e]"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="2.5"
-          stroke="currentColor"
-        >
-          <motion.path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5 13l4 4L19 7"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, delay: 0.5, ease: "easeInOut" }}
-          />
-        </svg>
+        <h1 className="text-2xl font-bold text-center mb-4 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] bg-clip-text text-transparent">
+          Confirmación de compra
+        </h1>
+        <p className="text-sm text-center text-[#5a4a3c] mb-6">
+          ¡Tu pedido fue procesado con éxito!  
+          Estamos generando tu comprobante digital 💎
+        </p>
+
+        {/* 🧮 Ticket visual */}
+        <div className="border-t border-b border-dashed border-[#b08c4e]/40 py-4 text-sm leading-relaxed">
+          <p>Cliente: <span className="font-semibold">Lucía Fernández</span></p>
+          <p>N° de orden: <span className="font-semibold">#YOQ-{Math.floor(Math.random() * 90000 + 10000)}</span></p>
+          <p>Fecha: <span className="font-semibold">{new Date().toLocaleDateString()}</span></p>
+          <p>Estado: <span className="text-[#b08c4e] font-semibold">Pagado ✅</span></p>
+        </div>
+
+        {/* 🧾 QR decorativo */}
+        <div className="flex justify-center mt-6">
+          <motion.div
+            animate={{ rotate: [0, 3, -3, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="w-24 h-24 rounded-xl bg-[conic-gradient(from_180deg,#ffd85a_0deg,#ff66b3_120deg,#42e2b8_240deg,#ffd85a_360deg)] flex items-center justify-center"
+          >
+            <div className="w-16 h-16 bg-[#3b3d45] rounded-md flex items-center justify-center text-xs text-[#ffd85a] font-bold">
+              QR
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ✨ Efecto de brillo */}
+        <motion.div
+          animate={{
+            x: ["-120%", "120%"],
+            opacity: [0, 0.5, 0],
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
+        />
       </motion.div>
-
-      {/* 🌸 Mensaje */}
-      <motion.h1
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.2, duration: 1 }}
-        className="text-4xl font-bold text-[#b08c4e] mt-8"
-      >
-        Pedido confirmado ✨
-      </motion.h1>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 1 }}
-        className="text-[#7a6a4f] mt-4 text-lg max-w-md leading-relaxed"
-      >
-        Gracias por tu compra.  
-        Tu pedido está siendo preparado con el mismo cuidado con el que fue creado 💛  
-      </motion.p>
-
-      {/* 🌙 Línea dorada animada */}
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: "120px" }}
-        transition={{ delay: 1.8, duration: 1 }}
-        className="mt-8 h-[2px] bg-gradient-to-r from-transparent via-[#b08c4e] to-transparent"
-      />
-
-      {/* ⏳ Texto inferior */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
-        className="text-sm text-[#a4977b] mt-6 italic"
-      >
-        Redirigiendo a la despedida en unos segundos...
-      </motion.p>
     </motion.div>
   );
 }

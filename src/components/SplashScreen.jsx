@@ -1,127 +1,141 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { useAmbient } from "../context/AmbientContext";
+import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 export default function SplashScreen({ onFinish }) {
-  const { theme, palette } = useAmbient();
-  const [show, setShow] = useState(true);
-  const backendURL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+  const canvasRef = useRef(null);
 
+  // ✨ Partículas metálicas flotantes
   useEffect(() => {
-   // startAmbientSound();
-    const timer = setTimeout(() => {
-      setShow(false);
-      setTimeout(onFinish, 800);
-    }, 3200);
-    return () => clearTimeout(timer);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const colors = [
+      "rgba(255,215,120,0.3)",
+      "rgba(255,102,179,0.25)",
+      "rgba(66,226,184,0.25)",
+      "rgba(180,220,250,0.2)",
+    ];
+
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      particles = Array.from({ length: 40 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 0.5,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: Math.random() * 0.4 + 0.1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      }));
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.y > canvas.height) p.y = 0;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.x < 0) p.x = canvas.width;
+      });
+      requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
   }, []);
 
-  // ✨ Generar partículas
-  const particles = Array.from({ length: 35 }).map((_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
-    delay: Math.random() * 3,
-  }));
+  // 🔄 Duración de la animación del splash
+  useEffect(() => {
+    const timer = setTimeout(() => onFinish?.(), 3000);
+    return () => clearTimeout(timer);
+  }, [onFinish]);
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="fixed inset-0 flex items-center justify-center z-[9999] overflow-hidden"
-          style={{
-            background: `linear-gradient(to bottom right, ${palette[theme].from}, ${palette[theme].via}, ${palette[theme].to})`,
-          }}
-        >
-          {/* 💫 Partículas flotantes */}
-          {particles.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 0 }}
-              animate={{
-                opacity: [0, 1, 0],
-                y: [0, -20, 0],
-                x: [0, Math.random() * 20 - 10, 0],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                delay: p.delay,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="absolute rounded-full bg-[#e8d29a]"
-              style={{
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                top: `${p.y}%`,
-                left: `${p.x}%`,
-                opacity: 0.8,
-                filter: "blur(1px)",
-              }}
-            />
-          ))}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1 }}
+      className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#2b2d33] via-[#4a4c55] to-[#7d808c] overflow-hidden text-white font-[Poppins] z-[9999]"
+    >
+      {/* 🎨 Animaciones locales */}
+      <style>{`
+        :root{
+          --color-rosa:#ff66b3;
+          --color-dorado:#ffd85a;
+          --color-turquesa:#42e2b8;
+        }
+        @keyframes metalLux {
+          0% { background-position: 0% 50%; opacity: 0.6; }
+          50% { background-position: 100% 50%; opacity: 0.9; }
+          100% { background-position: 0% 50%; opacity: 0.6; }
+        }
+        @keyframes pulseLight {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.08); }
+        }
+        @keyframes sweepGloss {
+          0% { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+          30% { opacity: 0.8; }
+          100% { transform: translateX(120%) skewX(-20deg); opacity: 0; }
+        }
+      `}</style>
 
-          {/* ✨ Luz ambiental */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 0.3, scale: 1 }}
-            transition={{ duration: 2 }}
-            className="absolute inset-0 blur-3xl"
-            style={{
-              background: `radial-gradient(circle at 50% 50%, ${palette[theme].to}A0, transparent 70%)`,
-            }}
-          />
+      {/* 🌈 Fondo con reflejos metálicos */}
+      <div
+        className="absolute inset-0 animate-[metalLux_18s_ease-in-out_infinite]"
+        style={{
+          backgroundImage: `
+            linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(212,185,120,0.08) 40%, rgba(255,255,255,0.1) 70%, transparent 100%),
+            radial-gradient(circle at 30% 30%, rgba(255,102,179,0.25), transparent 70%),
+            radial-gradient(circle at 70% 70%, rgba(255,216,90,0.25), transparent 70%),
+            radial-gradient(circle at 50% 90%, rgba(66,226,184,0.25), transparent 70%)
+          `,
+          backgroundSize: "250% 250%",
+          mixBlendMode: "soft-light",
+          filter: "blur(1.5px)",
+        }}
+      />
 
-          {/* 🌟 Logo central */}
-          <motion.img
-            src={`${backendURL}/media/productos/souvenir/catalogo-diego-1-1.webp`}
-            alt="Yoquet Diseños"
-            initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="w-28 h-28 rounded-2xl object-cover shadow-lg ring-2 ring-[#d4b978]/60 relative z-10"
-          />
+      {/* ✨ Partículas */}
+      <canvas ref={canvasRef} className="absolute inset-0 -z-10 pointer-events-none" />
 
-          {/* 💫 Halo brillante */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0.4 }}
-            animate={{ scale: 2.4, opacity: 0 }}
-            transition={{
-              duration: 2.2,
-              repeat: Infinity,
-              ease: "easeOut",
-            }}
-            className="absolute w-28 h-28 rounded-full bg-gradient-to-r from-[#e8d29a]/70 to-transparent blur-xl"
-          />
+      {/* 💎 Logo principal */}
+      <motion.img
+        src="https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet/logo-yoquet-metalico.svg"
+        alt="Yoquet Diseños"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: [1, 1.06, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+        className="w-44 sm:w-56 mb-8 drop-shadow-[0_0_25px_rgba(255,255,255,0.35)] animate-[pulseLight_3s_infinite]"
+      />
 
-          {/* 🌟 Brillo que cruza */}
-          <motion.div
-            initial={{ left: "-200%" }}
-            animate={{ left: "200%" }}
-            transition={{
-              duration: 2,
-              ease: "easeInOut",
-              repeat: 1,
-              delay: 0.6,
-            }}
-            className="absolute w-1/3 h-32 bg-gradient-to-r from-transparent via-white/80 to-transparent skew-x-12 rounded-full"
-          />
+      {/* 💫 Título animado */}
+      <h1 className="relative text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-[linear-gradient(90deg,var(--color-rosa),var(--color-dorado),var(--color-turquesa))] bg-[length:200%_auto] animate-[metalLux_10s_ease-in-out_infinite] drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]">
+        Yoquet Diseños
+        <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0),rgba(255,255,255,0.35),rgba(255,255,255,0))] animate-[sweepGloss_5s_infinite]" />
+      </h1>
 
-          {/* 🪶 Nombre */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="absolute bottom-16 text-3xl sm:text-4xl font-semibold text-[#4b3f2f]"
-          >
-            <span className="text-[#b08c4e] font-bold">Yoquet Diseños</span>
-          </motion.h1>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      {/* 🌟 Subtítulo */}
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 1 }}
+        className="mt-6 text-[#ffd85a] text-lg tracking-wide font-medium"
+      >
+        Brillá en cada detalle ✨
+      </motion.p>
+    </motion.div>
   );
 }
