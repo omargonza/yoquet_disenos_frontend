@@ -1,7 +1,7 @@
 // src/pages/Productos.jsx
 import { useEffect, useState, useRef } from "react";
 import api from "../utils/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
@@ -9,7 +9,14 @@ import axios from "axios";
 
 /* ====== Iconos SVG livianos ====== */
 const IconGrid = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <rect x="3" y="3" width="7" height="7" />
     <rect x="14" y="3" width="7" height="7" />
     <rect x="3" y="14" width="7" height="7" />
@@ -17,7 +24,14 @@ const IconGrid = () => (
   </svg>
 );
 const IconList = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <line x1="8" y1="6" x2="21" y2="6" />
     <line x1="8" y1="12" x2="21" y2="12" />
     <line x1="8" y1="18" x2="21" y2="18" />
@@ -27,7 +41,14 @@ const IconList = () => (
   </svg>
 );
 const IconFilter = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+  >
     <polygon points="3 4 21 4 14 14 14 21 10 19 10 14 3 4" />
   </svg>
 );
@@ -60,13 +81,15 @@ export default function Productos() {
   const canvasMetalRef = useRef(null); // partículas metálicas
   const canvasColorRef = useRef(null); // partículas coloridas
 
-  const backendURL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000/";
 
   /* ====== Carga con caché ====== */
   useEffect(() => {
     const cachedProducts = localStorage.getItem("productos_cache");
     const cachedTime = localStorage.getItem("productos_cache_time");
-    const isRecent = cachedTime && Date.now() - parseInt(cachedTime, 10) < 3600 * 1000;
+    const isRecent =
+      cachedTime && Date.now() - parseInt(cachedTime, 10) < 3600 * 1000;
 
     if (cachedProducts && isRecent) {
       setProductos(JSON.parse(cachedProducts));
@@ -80,14 +103,21 @@ export default function Productos() {
           axios.get(`${backendURL}/api/categorias/`),
         ]);
 
-        const prodData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.results || [];
-        const catData = Array.isArray(catRes.data) ? catRes.data : catRes.data.results || [];
+        const prodData = Array.isArray(prodRes.data)
+          ? prodRes.data
+          : prodRes.data.results || [];
+        const catData = Array.isArray(catRes.data)
+          ? catRes.data
+          : catRes.data.results || [];
 
         setProductos(prodData);
         setCategorias(catData);
 
         localStorage.setItem("productos_cache", JSON.stringify(prodData));
-        localStorage.setItem("productos_cache_time", Date.now().toString());
+        localStorage.setItem(
+          "productos_cache_time",
+          Date.now().toString()
+        );
       } catch (error) {
         console.error("Error al cargar productos:", error);
         showToast("No se pudieron cargar los productos", "error");
@@ -110,20 +140,23 @@ export default function Productos() {
     const imgRect = imgEl.getBoundingClientRect();
     const cartRect = cartRef.current.getBoundingClientRect();
 
-    // control “hacia arriba” para una parábola con sensación 3D
     const controlX = (imgRect.left + cartRect.left) / 2;
     const controlY = Math.min(imgRect.top, cartRect.top) - 200;
 
     setBezierFlight({
       src: producto.imagen,
-      start: { x: imgRect.left, y: imgRect.top, w: imgRect.width, h: imgRect.height },
+      start: {
+        x: imgRect.left,
+        y: imgRect.top,
+        w: imgRect.width,
+        h: imgRect.height,
+      },
       control: { x: controlX, y: controlY },
       end: { x: cartRect.left, y: cartRect.top },
       startTime: performance.now(),
       duration: 1200,
     });
 
-    // pulso en el carrito (premium)
     cartRef.current.classList.add("cart-pulse");
     setTimeout(() => cartRef.current.classList.remove("cart-pulse"), 900);
   };
@@ -181,13 +214,14 @@ export default function Productos() {
     // ---------- Capa 2: color ----------
     const canvasC = canvasColorRef.current;
     const ctxC = canvasC?.getContext("2d");
-    if (!canvasC || !ctxC) return () => window.removeEventListener("resize", resizeM);
+    if (!canvasC || !ctxC)
+      return () => window.removeEventListener("resize", resizeM);
 
     const colorParts = [
       "rgba(255,102,179,0.25)", // rosa
-      "rgba(139,92,246,0.22)",  // violeta
-      "rgba(66,226,184,0.22)",  // turquesa
-      "rgba(255,216,90,0.22)",  // dorado
+      "rgba(139,92,246,0.22)", // violeta
+      "rgba(66,226,184,0.22)", // turquesa
+      "rgba(255,216,90,0.22)", // dorado
     ];
     let cParts = [];
 
@@ -251,8 +285,14 @@ export default function Productos() {
       transition={{ duration: 0.7 }}
       className="relative min-h-screen text-[#f4f4f6] px-6 py-10 overflow-hidden"
     >
-      {/* ====== Estilos premium locales ====== */}
+      {/* ====== Estilos premium locales (alineados a Home/Login) ====== */}
       <style>{`
+        :root {
+          --color-rosa: #ff66b3;
+          --color-dorado: #ffd85a;
+          --color-turquesa: #42e2b8;
+        }
+
         @keyframes metalLux {
           0% { background-position: 0% 50%; opacity: 0.65; }
           50% { background-position: 100% 50%; opacity: 0.9; }
@@ -295,6 +335,37 @@ export default function Productos() {
           pointer-events: none;
         }
 
+        /* Botón festivo (mismo que Home/Login) */
+        .btn-festivo {
+          position: relative;
+          overflow: hidden;
+          border-radius: 9999px;
+          padding: 0.5rem 1.4rem;
+          font-weight: 600;
+          color: #0b0a09;
+          background: linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa));
+          box-shadow: 0 0 18px rgba(255, 216, 90, 0.6);
+          transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+        }
+        .btn-festivo:hover {
+          transform: translateY(-1px) scale(1.03);
+          box-shadow: 0 0 26px rgba(255, 216, 90, 0.9);
+          filter: brightness(1.03);
+        }
+
+        /* Firma visual conurbaDEV */
+        .conurba-chip {
+          backdrop-filter: blur(12px);
+          background: radial-gradient(circle at 0% 0%, rgba(255,216,90,0.28), transparent 55%),
+                      rgba(8,8,10,0.72);
+          border-radius: 9999px;
+          border: 1px solid rgba(255,255,255,0.18);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+        }
+        .conurba-pulse-dot {
+          box-shadow: 0 0 14px rgba(255,216,90,0.9);
+        }
+
         @media (max-width: 768px) {
           .metal-lux-overlay { opacity: 0.55 !important; filter: blur(1px) !important; }
           .header-auras { opacity: 0.50 !important; filter: blur(8px) !important; }
@@ -330,8 +401,14 @@ export default function Productos() {
       />
 
       {/* canvases de partículas */}
-      <canvas ref={canvasMetalRef} className="pointer-events-none absolute inset-0 -z-10" />
-      <canvas ref={canvasColorRef} className="pointer-events-none absolute inset-0 -z-10" />
+      <canvas
+        ref={canvasMetalRef}
+        className="pointer-events-none absolute inset-0 -z-10"
+      />
+      <canvas
+        ref={canvasColorRef}
+        className="pointer-events-none absolute inset-0 -z-10"
+      />
 
       {/* ====== Header vibrante ====== */}
       <header className="relative max-w-7xl mx-auto mb-12">
@@ -455,14 +532,16 @@ export default function Productos() {
                     alt={producto.nombre}
                     className="w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
                   />
-                  {/* halo suave */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(255,255,255,0.12),transparent_60%)]" />
-                  {/* brillo desplazándose */}
                   <div className="pointer-events-none absolute inset-0 group-hover:animate-shine" />
                 </div>
 
                 {/* Info */}
-                <div className={`flex flex-col justify-between ${vista === "list" ? "flex-1 pl-4" : "mt-4"}`}>
+                <div
+                  className={`flex flex-col justify-between ${
+                    vista === "list" ? "flex-1 pl-4" : "mt-4"
+                  }`}
+                >
                   <h3 className="text-lg font-semibold text-white truncate font-[Playfair_Display] drop-shadow">
                     {producto.nombre}
                   </h3>
@@ -495,11 +574,29 @@ export default function Productos() {
         </motion.div>
       </div>
 
+      {/* ====== FOOTER PROFESIONAL ====== */}
+      <div className="relative z-[30] mt-20 mb-10 text-center text-white/70 text-xs">
+        © {new Date().getFullYear()} Yoquet Diseños — Estilo que celebra 🎉
+        <br />
+        <span className="text-[10px] text-white/50 tracking-wide">
+          Desarrollado con ❤️ por{" "}
+          <span className="text-[#ffd85a] font-semibold">conurbaDEV</span>
+        </span>
+      </div>
+
+      {/* ⭐ Firma visual conurbaDEV, fija y sutil */}
+      <div className="fixed bottom-4 left-4 z-40 hidden xs:flex sm:flex items-center gap-2 px-3 py-1 conurba-chip text-[10px] uppercase tracking-[0.18em]">
+        <span className="w-2 h-2 rounded-full bg-[#ffd85a] conurba-pulse-dot" />
+        <span className="font-semibold text-white/80">conurbaDEV</span>
+      </div>
+
       {/* ====== Toggle de efectos ====== */}
       <button
         onClick={() => setShowParticles(!showParticles)}
         className={`fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 ${
-          showParticles ? "btn-festivo animate-pulse" : "bg-white/10 border border-white/20 text-white"
+          showParticles
+            ? "btn-festivo animate-pulse"
+            : "bg-white/10 border border-white/20 text-white"
         } hover:scale-110`}
         title={showParticles ? "Ocultar efectos" : "Activar efectos"}
       >
@@ -536,21 +633,30 @@ function BezierFlight({ flight, onEnd }) {
 
   const { src, start, control, end } = flight;
 
-  // Quadratic Bézier
-  const bx = (1 - t) ** 2 * start.x + 2 * (1 - t) * t * control.x + t ** 2 * end.x;
-  const by = (1 - t) ** 2 * start.y + 2 * (1 - t) * t * control.y + t ** 2 * end.y;
+  const bx =
+    (1 - t) ** 2 * start.x +
+    2 * (1 - t) * t * control.x +
+    t ** 2 * end.x;
+  const by =
+    (1 - t) ** 2 * start.y +
+    2 * (1 - t) * t * control.y +
+    t ** 2 * end.y;
 
-  // cambio de tamaño hacia miniatura
   const w = start.w * (1 - t) + 44 * t;
   const h = start.h * (1 - t) + 44 * t;
 
-  // vector para el ángulo y trazo
   const prevT = Math.max(0, t - 0.02);
-  const px = (1 - prevT) ** 2 * start.x + 2 * (1 - prevT) * prevT * control.x + prevT ** 2 * end.x;
-  const py = (1 - prevT) ** 2 * start.y + 2 * (1 - prevT) * prevT * control.y + prevT ** 2 * end.y;
+  const px =
+    (1 - prevT) ** 2 * start.x +
+    2 * (1 - prevT) * prevT * control.x +
+    prevT ** 2 * end.x;
+  const py =
+    (1 - prevT) ** 2 * start.y +
+    2 * (1 - prevT) * prevT * control.y +
+    prevT ** 2 * end.y;
   const dx = bx - px;
   const dy = by - py;
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
 
   return (
     <>

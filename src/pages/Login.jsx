@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useToast } from "../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+
+import logo_Yoquet from "../assets/logo_Yoquet.png";
+import login from "../assets/login.jpg";
+
 import axios from "axios";
 
 export default function Login() {
@@ -13,11 +17,10 @@ export default function Login() {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
 
-  const backendURL =
-    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-  const mediaBase =
-    import.meta.env.VITE_MEDIA_BASE ||
-    "https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet";
+  const backendBase = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000")
+    .replace(/\/$/, "");
+
+  const backendURL = backendBase;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,9 +35,11 @@ export default function Login() {
 
       localStorage.setItem("access_token", res.data.access);
       localStorage.setItem("refresh_token", res.data.refresh);
-      showToast(`¡Bienvenido de nuevo, ${username || "artista"}!`, "celebration");
+
+      showToast(`🎉 ¡Bienvenido, ${username || "artista"}!`, "celebration");
       showToast("Inicio de sesión exitoso", "success");
-      setTimeout(() => navigate("/productos"), 2000);
+
+      setTimeout(() => navigate("/productos"), 1200);
     } catch (err) {
       console.error(err);
       setError("Usuario o contraseña incorrectos");
@@ -43,7 +48,7 @@ export default function Login() {
     }
   };
 
-  // 🌌 Partículas metálicas del fondo
+  // ✨ Partículas festivas (mezcla de dorado, rosa y turquesa)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -51,21 +56,23 @@ export default function Login() {
     if (!ctx) return;
 
     const colors = [
-      "rgba(255,215,120,0.25)",
-      "rgba(200,200,255,0.25)",
-      "rgba(180,220,250,0.25)",
+      "rgba(255, 216, 90, 0.35)", // dorado
+      "rgba(255, 102, 179, 0.32)", // rosa
+      "rgba(66, 226, 184, 0.32)",  // turquesa
+      "rgba(255,255,255,0.20)",    // luz
     ];
+
     let particles = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      particles = Array.from({ length: 35 }, () => ({
+      particles = Array.from({ length: 48 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        r: Math.random() * 2 + 0.5,
-        dx: (Math.random() - 0.5) * 0.4,
-        dy: Math.random() * 0.4 + 0.1,
+        r: Math.random() * 2.2 + 0.7,
+        dx: (Math.random() - 0.5) * 0.35,
+        dy: Math.random() * 0.25 + 0.08,
         color: colors[Math.floor(Math.random() * colors.length)],
       }));
     };
@@ -77,8 +84,9 @@ export default function Login() {
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.fill();
-        p.y += p.dy;
         p.x += p.dx;
+        p.y += p.dy;
+
         if (p.y > canvas.height) p.y = 0;
         if (p.x > canvas.width) p.x = 0;
         if (p.x < 0) p.x = canvas.width;
@@ -89,130 +97,133 @@ export default function Login() {
     resize();
     draw();
     window.addEventListener("resize", resize);
+
     return () => window.removeEventListener("resize", resize);
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen relative overflow-hidden text-white bg-gradient-to-br from-[#2b2d33] via-[#4a4c55] to-[#7d808c]">
-      {/* 🎨 Estilos locales */}
+    <div className="flex flex-col md:flex-row min-h-screen relative overflow-hidden text-white bg-gradient-to-br from-[#1b1c1f] via-[#2d2f36] to-[#4b4d55]">
+
+      {/* 🎨 ESTILOS FESTIVOS */}
       <style>{`
-        :root{
-          --color-rosa:#ff66b3;
-          --color-dorado:#ffd85a;
-          --color-turquesa:#42e2b8;
+        :root {
+          --color-rosa: #ff66b3;
+          --color-dorado: #ffd85a;
+          --color-turquesa: #42e2b8;
         }
-        @keyframes metalLux {
-          0% { background-position: 0% 50%; opacity: 0.6; }
-          50% { background-position: 100% 50%; opacity: 0.9; }
-          100% { background-position: 0% 50%; opacity: 0.6; }
+
+        @keyframes metalGlow {
+          0% { opacity: 0.45; transform: scale(1); }
+          50% { opacity: 0.75; transform: scale(1.06); }
+          100% { opacity: 0.45; transform: scale(1); }
         }
-        @keyframes sweepGloss {
-          0% { transform: translateX(-120%) skewX(-15deg); opacity: 0; }
-          50% { opacity: 0.3; }
-          100% { transform: translateX(120%) skewX(-15deg); opacity: 0; }
+
+        @keyframes shineSweep {
+          0% { transform: translateX(-130%) rotate(8deg); opacity: 0; }
+          45% { opacity: 0.55; }
+          100% { transform: translateX(140%) rotate(8deg); opacity: 0; }
         }
+
         .btn-festivo {
           @apply px-5 py-2 rounded-full font-semibold text-white shadow-md transition-all relative overflow-hidden;
           background: linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa));
+          background-size: 180% 180%;
+          animation: metalGlow 5s ease-in-out infinite;
         }
-        .btn-festivo:hover { transform: scale(1.05); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+
+        .btn-festivo::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(120deg, rgba(255,255,255,0), rgba(255,255,255,0.7), rgba(255,255,255,0));
+          transform: translateX(-150%);
+          animation: shineSweep 4s infinite;
+        }
       `}</style>
 
-      {/* ✨ Overlay metálico */}
-      <div
-        className="absolute inset-0 pointer-events-none mix-blend-overlay animate-[metalLux_18s_ease-in-out_infinite]"
-        style={{
-          backgroundImage: `
-            linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(212,185,120,0.08) 40%, rgba(255,255,255,0.1) 70%, transparent 100%),
-            radial-gradient(circle at 35% 25%, rgba(255,255,255,0.18) 0%, transparent 60%),
-            radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 70%)
-          `,
-          backgroundSize: "250% 250%",
-          filter: "blur(2px)",
-        }}
-      />
-
-      {/* ✨ Partículas metálicas */}
+      {/* ✨ CANVAS DE EFECTOS */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none -z-10" />
 
-      {/* 🌈 Halos coloridos sutiles */}
+      {/* 🌈 HALOS FESTIVOS DETRÁS DEL LOGO */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
+        animate={{ opacity: 0.35 }}
         transition={{ duration: 1.2 }}
-        className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,102,179,0.35),transparent_70%),radial-gradient(circle_at_80%_70%,rgba(255,216,90,0.35),transparent_70%),radial-gradient(circle_at_50%_90%,rgba(66,226,184,0.35),transparent_70%)] blur-3xl"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,102,179,0.28),transparent_70%),radial-gradient(circle_at_75%_70%,rgba(255,216,90,0.28),transparent_70%),radial-gradient(circle_at_50%_90%,rgba(66,226,184,0.28),transparent_70%)] blur-3xl"
       />
 
-      {/* 📄 Columna izquierda: Formulario */}
-      <div className="flex flex-col justify-center w-full md:w-1/2 px-8 sm:px-14 lg:px-20 py-12 bg-black/50 backdrop-blur-lg border-r border-white/10 relative z-10">
+      {/* 🔐 COLUMNA IZQUIERDA: FORMULARIO */}
+      <div className="flex flex-col justify-center w-full md:w-1/2 px-8 sm:px-14 lg:px-20 py-12 bg-black/40 backdrop-blur-xl border-r border-white/10 relative z-10">
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9 }}
           className="w-full max-w-sm mx-auto"
         >
-          {/* LOGO */}
-          <motion.img
-            src={`${mediaBase}/productos/logo-yoquet.png`}
-            alt="Yoquet Diseños Logo"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="w-40 h-auto mx-auto mb-6 object-contain drop-shadow-[0_4px_10px_rgba(255,216,90,0.6)]"
-          />
+
+          {/* 🌟 LOGO FESTIVO */}
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-fit mx-auto mb-6"
+          >
+            {/* halo suave */}
+            <div className="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(255,216,90,0.35),rgba(255,102,179,0.2),rgba(66,226,184,0.25),transparent)] blur-2xl animate-pulse" />
+
+            <img
+              src={logo_Yoquet}
+              alt="Yoquet Logo"
+              className="relative w-44 h-auto object-contain drop-shadow-[0_8px_24px_rgba(255,216,90,0.6)]"
+            />
+          </motion.div>
 
           {/* TÍTULO */}
-          <h2 className="relative text-center text-3xl font-bold mb-1 text-transparent bg-clip-text bg-[linear-gradient(90deg,var(--color-rosa),var(--color-dorado),var(--color-turquesa))] bg-[length:200%_auto] animate-[metalLux_10s_ease-in-out_infinite] drop-shadow-[0_4px_14px_rgba(0,0,0,0.25)]">
-            Iniciá sesión
-            <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0),rgba(255,255,255,0.35),rgba(255,255,255,0))] animate-[sweepGloss_4s_infinite]" />
+          <h2 className="text-center text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--color-dorado)] via-[var(--color-rosa)] to-[var(--color-turquesa)] bg-clip-text text-transparent animate-[metalGlow_10s_infinite]">
+            ¡Bienvenido!
           </h2>
-          <p className="text-center text-[#e9e4dc] mb-8 text-sm italic">
-            Bienvenido a <span className="text-[#ffd85a] font-semibold">Yoquet Diseños</span> 🎉
+          <p className="text-center text-[#e4dccc] mb-6">
+            Iniciá sesión para seguir creando 🎉
           </p>
 
           {/* FORMULARIO */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#f5e6d0] mb-1">
-                Usuario o Email
-              </label>
+              <label className="block text-sm mb-1 text-[#ffeccb] font-medium">Usuario</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 bg-[#1a181a]/60 border border-[#ffd85a]/40 rounded-md focus:ring-2 focus:ring-[#ff66b3] focus:border-[#ffd85a] text-[#fffaf2] outline-none transition text-sm placeholder-[#c9bca8]"
+                className="w-full px-3 py-2 bg-[#1c1b1f]/60 border border-[#ffd85a]/40 rounded-md text-[#fffaf2] focus:ring-2 focus:ring-[var(--color-rosa)] outline-none placeholder-[#bfae95] text-sm"
                 placeholder="usuario@ejemplo.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f5e6d0] mb-1">
-                Contraseña
-              </label>
+              <label className="block text-sm mb-1 text-[#ffeccb] font-medium">Contraseña</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#1a181a]/60 border border-[#ffd85a]/40 rounded-md focus:ring-2 focus:ring-[#ff66b3] focus:border-[#ffd85a] text-[#fffaf2] outline-none transition text-sm placeholder-[#c9bca8]"
+                className="w-full px-3 py-2 bg-[#1c1b1f]/60 border border-[#ffd85a]/40 rounded-md text-[#fffaf2] focus:ring-2 focus:ring-[var(--color-rosa)] outline-none placeholder-[#bfae95] text-sm"
                 placeholder="••••••••"
                 required
               />
             </div>
 
-            {/* BOTÓN */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
               type="submit"
               disabled={loading}
-              className="btn-festivo w-full justify-center"
+              className="btn-festivo w-full"
             >
-              {loading ? "Cargando..." : "Iniciar Sesión 🔐"}
+              {loading ? "Cargando..." : "Iniciar Sesión ✨"}
             </motion.button>
           </form>
 
-          {/* ERROR */}
           {error && (
             <motion.p
               initial={{ opacity: 0 }}
@@ -223,47 +234,47 @@ export default function Login() {
             </motion.p>
           )}
 
-          {/* FOOTER */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-[#e9e4dc]">
-              ¿Olvidaste tu contraseña?{" "}
-              <a
-                href="#"
-                className="text-[#ff66b3] hover:text-[#ffd85a] font-medium"
-              >
-                Recuperar
-              </a>
-            </p>
-            <p className="text-xs text-[#c1b8a4] mt-3">
-              © {new Date().getFullYear()} Yoquet Diseños
-            </p>
+          <p className="text-center text-[#e9e4dc] text-sm mt-8">
+            ¿Olvidaste tu contraseña?{" "}
+            <span className="text-[var(--color-rosa)] cursor-pointer hover:text-[var(--color-dorado)]">
+              Recuperar
+            </span>
+          </p>
+
+          {/* ====== FOOTER PROFESIONAL ====== */}
+          <div className="relative z-[30] mt-20 mb-10 text-center text-white/70 text-xs">
+            © {new Date().getFullYear()} Yoquet Diseños — Estilo que celebra 🎉
+            <br />
+            <span className="text-[10px] text-white/50 tracking-wide">
+              Desarrollado con ❤️ por{" "}
+              <span className="text-[#ffd85a] font-semibold">conurbaDEV</span>
+            </span>
           </div>
+
+          {/* ⭐ Firma visual conurbaDEV, fija y sutil */}
+          <div className="fixed bottom-4 left-4 z-40 hidden xs:flex sm:flex items-center gap-2 px-3 py-1 conurba-chip text-[10px] uppercase tracking-[0.18em]">
+            <span className="w-2 h-2 rounded-full bg-[#ffd85a] conurba-pulse-dot" />
+            <span className="font-semibold text-white/80">conurbaDEV</span>
+          </div>
+
         </motion.div>
       </div>
 
-      {/* 🎨 COLUMNA DERECHA */}
+      {/* 🎨 COLUMNA DERECHA: IMAGEN */}
       <motion.div
         initial={{ opacity: 0, x: 60 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1 }}
+        transition={{ duration: 1.1 }}
         className="hidden md:flex w-1/2 items-center justify-center relative overflow-hidden"
       >
         <img
-          src={`${mediaBase}/productos/fondo-festivo.webp`}
-          alt="Fondo festivo"
+          src={login}
+          alt="Fondo"
           className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-screen"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#000]/70 via-transparent to-[#000]/60"></div>
-
-        <div className="relative z-10 text-center text-[#fffaf0] drop-shadow-lg px-10">
-          <h3 className="text-3xl font-bold mb-2 tracking-tight bg-gradient-to-r from-[#ffd85a] via-[#ff66b3] to-[#42e2b8] bg-clip-text text-transparent">
-            ✨ Creatividad sin límites
-          </h3>
-          <p className="text-base text-[#fdf7e9]">
-            Cada diseño, una fiesta de color 🎊
-          </p>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-transparent to-black/70" />
       </motion.div>
+
     </div>
   );
 }

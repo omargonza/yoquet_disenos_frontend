@@ -1,5 +1,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
+import logo_Yoquet from "../assets/logo_Yoquet.png";
+
+// y luego usarlo:
+
+
 
 export default function SplashScreen({ onFinish }) {
   const canvasRef = useRef(null);
@@ -113,7 +118,7 @@ export default function SplashScreen({ onFinish }) {
 
       {/* 💎 Logo principal */}
       <motion.img
-        src="https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet/logo-yoquet-metalico.svg"
+        src={logo_Yoquet} 
         alt="Yoquet Diseños"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: [1, 1.06, 1] }}

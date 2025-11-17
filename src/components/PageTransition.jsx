@@ -2,6 +2,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAmbient } from "../context/AmbientContext";
+import logo_Yoquet from "../assets/logo_Yoquet.png";
+
+
+
+
 
 export default function PageTransition({ children }) {
   const location = useLocation();
@@ -89,7 +94,7 @@ export default function PageTransition({ children }) {
 
             {/* 🎭 Logo sutil flotante */}
             <motion.img
-              src="https://res.cloudinary.com/dfkyxmjnx/image/upload/v1730060034/yoquet/logo-yoquet-metalico.svg"
+              src={logo_Yoquet}  
               alt="Yoquet Diseños"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 0.8, scale: [1, 1.05, 1] }}
