@@ -19,7 +19,7 @@ export default function Home() {
   const { width, height } = useWindowSize();
 
   /* =========================================================
-     Cargar Destacados
+     Cargar destacados
   ========================================================= */
   useEffect(() => {
     const fetchDestacados = async () => {
@@ -27,34 +27,36 @@ export default function Home() {
         const res = await fetch(`${backendURL}/api/productos/destacados/`);
         const data = await res.json();
         setDestacados(data.results || data);
-      } catch (error) {
-        console.log("Error cargando destacados:", error);
+      } catch (err) {
+        console.log("Error cargando destacados:", err);
       }
     };
     fetchDestacados();
-  }, [backendURL]);
+  }, []);
 
   /* =========================================================
-     Carrusel Auto Scroll
+     Carrusel auto-scroll
   ========================================================= */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
     let frame;
     const speed = 0.25;
 
-    const animate = () => {
+    const anim = () => {
       el.scrollLeft += speed;
       if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
-      frame = requestAnimationFrame(animate);
+      frame = requestAnimationFrame(anim);
     };
 
-    frame = requestAnimationFrame(animate);
+    frame = requestAnimationFrame(anim);
+
     return () => cancelAnimationFrame(frame);
   }, [destacados]);
 
   /* =========================================================
-     Autenticación y Mensaje según hora
+     Login + saludo según hora
   ========================================================= */
   useEffect(() => {
     const hora = new Date().getHours();
@@ -62,22 +64,7 @@ export default function Home() {
     else if (hora < 18) setMensaje("💎 Buenas tardes, seguimos creando magia");
     else setMensaje("🌙 Buenas noches, el glamour no descansa");
 
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        if (Date.now() < decoded.exp * 1000) {
-          setUsername(decoded.username || decoded.user || "Cliente");
-          setIsLoggedIn(true);
-        } else {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-        }
-      } catch {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-      }
-    }
+
   }, []);
 
   const handleLogout = () => {
@@ -87,7 +74,7 @@ export default function Home() {
   };
 
   /* =========================================================
-     Fondo de partículas metálicas
+     Fondo partículas metálicas
   ========================================================= */
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -100,25 +87,25 @@ export default function Home() {
       "rgba(200,200,255,0.25)",
       "rgba(180,220,250,0.25)",
     ];
-    let particles = [];
+
+    let parts = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-
-      particles = Array.from({ length: 36 }, () => ({
+      parts = Array.from({ length: 32 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         r: Math.random() * 2 + 0.6,
-        dx: (Math.random() - 0.5) * 0.35,
-        dy: Math.random() * 0.35 + 0.08,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: Math.random() * 0.4 + 0.1,
         color: colors[Math.floor(Math.random() * colors.length)],
       }));
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
+      parts.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
@@ -135,37 +122,35 @@ export default function Home() {
     resize();
     draw();
     window.addEventListener("resize", resize);
+
     return () => window.removeEventListener("resize", resize);
   }, []);
 
   return (
     <>
-      {/* 🎊 Confetti Metálico */}
+      {/* 🎊 Confetti metálico */}
       <Confetti
         width={width}
         height={height}
-        numberOfPieces={80}
+        numberOfPieces={70}
         recycle={false}
         gravity={0.2}
         colors={["#ff1d8e", "#ffcc33", "#00b8ff", "#ffffff", "#7b2cbf"]}
-        tweenDuration={8000}
       />
 
       {/* =========================================================
-          HOME - Contenedor Principal
+         HOME
       ========================================================= */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="relative min-h-screen flex flex-col items-center justify-start text-center
-        bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c] text-white overflow-hidden pt-16 sm:pt-20
-        px-4 sm:px-6"
+        className="relative min-h-screen flex flex-col items-center justify-start 
+        text-center px-6 sm:px-8 pt-24
+        bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c] text-white overflow-hidden"
       >
-        {/* 🎨 Estilos locales */}
-        <style>
-          {`
-          :root{
+        <style>{`
+          :root {
             --color-rosa:#ff66b3;
             --color-dorado:#ffd85a;
             --color-turquesa:#42e2b8;
@@ -177,208 +162,128 @@ export default function Home() {
             100% { background-position: 0% 50%; }
           }
 
-          .title-gloss::after{
+          .title-gloss::after {
             content:"";
             position:absolute;
             inset:0;
             background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0));
             transform: translateX(-120%) skewX(-18deg);
             animation: glossRun 4.6s ease-in-out infinite 0.8s;
-            pointer-events:none;
           }
 
           @keyframes glossRun {
-            0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
-            25% { opacity: 0.3; }
-            50% { transform: translateX(120%) skewX(-18deg); opacity: 0.2; }
+            0% { transform: translateX(-120%); opacity: 0; }
+            50% { transform: translateX(120%); opacity: .25; }
             100% { opacity:0; }
           }
 
-          .btn-festivo{
-            position:relative;
-            overflow:hidden;
+          .btn-festivo {
             border-radius:9999px;
-            padding:0.75rem 2rem;
+            padding:.8rem 2rem;
             font-weight:600;
             background:linear-gradient(90deg,var(--color-rosa),var(--color-dorado),var(--color-turquesa));
-            background-size:200% 200%;
-            animation:metalGlow 6s ease-in-out infinite;
-            color:#0b0a09;
-            box-shadow:0 0 14px rgba(255,216,90,0.55);
+            color:#111;
+            box-shadow:0 0 16px rgba(255,216,90,0.55);
             transition:transform .25s ease;
           }
-          .btn-festivo:hover{
-            transform:scale(1.05);
-          }
 
-          @keyframes metalGlow{
-            0% { filter:brightness(1); }
-            50% { filter:brightness(1.22); }
-            100% { filter:brightness(1); }
-          }
+          .btn-festivo:hover { transform:scale(1.05); }
 
-          .btn-outline-festivo{
+          .btn-outline-festivo {
             border:2px solid var(--color-dorado);
             color:var(--color-dorado);
+            padding:.8rem 2rem;
             border-radius:9999px;
-            padding:0.75rem 2rem;
             font-weight:600;
-            transition:all .3s ease;
           }
-          .btn-outline-festivo:hover{
+          .btn-outline-festivo:hover {
             background:rgba(255,216,90,0.15);
             color:#111;
           }
 
-          .card-glam{
+          .card-glam {
             background:rgba(255,255,255,0.06);
-            border:1px solid rgba(255,204,51,0.18);
+            border:1px solid rgba(255,204,51,0.15);
             border-radius:24px;
-            backdrop-filter:blur(12px);
-            box-shadow:0 10px 28px rgba(0,0,0,0.22);
-            transition:transform .35s ease, box-shadow .35s ease, border .35s ease;
+            backdrop-filter:blur(10px);
+            transition:.35s;
           }
-          .card-glam:hover{
-            transform:translateY(-6px) scale(1.04);
+          .card-glam:hover {
+            transform:translateY(-5px) scale(1.04);
             border-color:rgba(255,204,51,0.45);
-            box-shadow:0 0 24px rgba(255,204,51,0.55), 0 16px 40px rgba(0,0,0,0.28);
           }
-        `}
-        </style>
+        `}</style>
 
-        {/* 🌌 Overlay metálico */}
-        <div className="metal-lux-overlay absolute inset-0 pointer-events-none z-[1]" />
-
-        {/* 🌈 Halos de color */}
-        <div className="absolute inset-0 overflow-hidden z-[2] pointer-events-none">
-          <div className="absolute w-[45vw] h-[45vw] top-[8%] left-[12%] rounded-full bg-[radial-gradient(circle,rgba(255,29,142,0.22),transparent)] blur-3xl" />
-          <div className="absolute w-[55vw] h-[55vw] bottom-[14%] right-[8%] rounded-full bg-[radial-gradient(circle,rgba(255,204,51,0.18),transparent)] blur-3xl" />
-          <div className="absolute w-[40vw] h-[40vw] bottom-[30%] left-[45%] rounded-full bg-[radial-gradient(circle,rgba(0,184,255,0.18),transparent)] blur-3xl" />
-        </div>
-
-        {/* 🎇 Partículas */}
+        {/* Partículas */}
         <canvas ref={canvasRef} className="absolute inset-0 -z-10" />
 
-        {/* =========================================================
-            HERO SECTION
-        ========================================================= */}
-        <div className="relative z-[3] w-full max-w-6xl mx-auto px-4 sm:px-6">
-
-          {/* LOGO — FESTIVO + HALO */}
-          <div className="relative w-fit mx-auto mb-8">
-            <div
-              className="absolute -inset-6 rounded-full blur-2xl animate-pulse"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(255,29,142,0.32), rgba(255,204,51,0.22), rgba(0,184,255,0.26), transparent 70%)",
-              }}
-            />
-            <motion.img
-              src={logo_Yoquet}
-              alt="Yoquet Diseños"
-              className="relative w-40 sm:w-48 drop-shadow-[0_8px_24px_rgba(255,216,90,0.75)]"
-              initial={{ scale: 0.88, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            />
-          </div>
+        {/* ======================================================
+            HERO (centrado)
+        ====================================================== */}
+        <div className="relative z-[3] w-full max-w-4xl mx-auto flex flex-col items-center text-center">
+          {/* LOGO */}
+          <motion.img
+            src={logo_Yoquet}
+            className="w-44 sm:w-52 drop-shadow-[0_8px_24px_rgba(255,216,90,0.75)] mb-8"
+            initial={{ opacity: 0, scale: 0.88 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+          />
 
           {/* TÍTULO */}
           <motion.h1
-            initial={{ y: 30, opacity: 0 }}
+            initial={{ y: 25, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="relative title-gloss
-              text-4xl sm:text-5xl md:text-6xl font-bold mb-3
+            transition={{ duration: 0.8 }}
+            className="title-gloss relative 
+              text-4xl sm:text-5xl md:text-6xl font-bold mb-3 
               text-transparent bg-clip-text 
               bg-gradient-to-r from-[#ff1d8e] via-[#ffcc33] to-[#00b8ff]
-              bg-[length:220%_auto] animate-[gradientHome_10s_ease_infinite]
-              drop-shadow-[0_0_22px_rgba(255,204,51,0.75)]"
+              bg-[length:220%_auto] animate-[gradientHome_10s_ease_infinite]"
           >
             Yoquet Diseños
           </motion.h1>
 
-          {/* Subtítulo */}
           <motion.p
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-[#ffcc33] text-lg max-w-xl mx-auto mb-8 font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+            className="text-[#ffcc33] text-lg max-w-xl mx-auto mb-8 font-medium"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
             🎉 Cotillón Premium — Color, Estilo y Brillo en Cada Detalle ✨
           </motion.p>
 
-          {/* =========================================================
-              LOGIN / LOGOUT
-          ========================================================= */}
-          {isLoggedIn ? (
-            <>
-              <motion.p
-                className="text-[#ffcc33] text-lg mb-6 italic"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {mensaje},{" "}
-                <span className="text-[#ff1d8e] font-semibold">{username}</span>{" "}
-                💫
-              </motion.p>
+          {/* BOTONES PRINCIPALES (SIEMPRE MOSTRAR CATÁLOGO) */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate("/productos")}
+              className="btn-festivo"
+            >
+              Ir al Catálogo 🛍️
+            </motion.button>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-                <motion.button
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate("/productos")}
-                  className="btn-festivo"
-                >
-                  Ir al Catálogo 🛍️
-                </motion.button>
+          
+          </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleLogout}
-                  className="btn-outline-festivo"
-                >
-                  Cerrar sesión
-                </motion.button>
-              </div>
-            </>
-          ) : (
-            <>
-              <motion.button
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => navigate("/login")}
-                className="btn-festivo"
-              >
-                Iniciar Sesión 🔐
-              </motion.button>
-
-              <p className="text-sm text-[#e7e6e1]/80 mt-4 mb-4">
-                Accedé a productos exclusivos para tus eventos más brillantes ✨
-              </p>
-            </>
-          )}
         </div>
 
-        {/* =========================================================
-            CARRUSEL DE DESTACADOS
-        ========================================================= */}
-        {destacados?.length > 0 && (
+        {/* ======================================================
+            DESTACADOS CENTRADOS
+        ====================================================== */}
+        {destacados.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9 }}
-            className="relative z-[3] w-full max-w-6xl mt-12 px-4 sm:px-6"
+            className="relative z-[3] w-full max-w-5xl mt-16 px-4 sm:px-6 
+            flex flex-col items-center text-center"
           >
-            <h2 className="text-2xl sm:text-3xl font-semibold text-[#ffcc33] mb-6">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-[#ffcc33] mb-8 text-center">
               Destacados de la colección 💎
             </h2>
 
-            <div className="relative">
-              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-[#3b3d45] to-transparent z-10" />
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-[#7d808c] to-transparent z-10" />
-
+            <div className="relative w-full">
               <div
                 ref={scrollRef}
                 className="flex gap-6 overflow-x-auto scrollbar-none pb-4 snap-x snap-mandatory"
@@ -387,37 +292,23 @@ export default function Home() {
                   <motion.div
                     key={p.id}
                     whileHover={{ scale: 1.05 }}
-                    className="card-glam min-w-[240px] sm:min-w-[280px] snap-start cursor-pointer group"
+                    className="card-glam min-w-[240px] sm:min-w-[280px] snap-start mx-auto cursor-pointer group"
                     onClick={() => navigate(`/productos/${p.id}`)}
                   >
                     <div className="relative overflow-hidden rounded-t-[24px]">
                       <img
                         src={p.imagen}
                         alt={p.nombre}
-                        className="w-full h-56 sm:h-64 object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.08]"
-                        onError={(e) => {
-                          e.currentTarget.src = logo_Yoquet; // fallback correcto
-                        }}
-                      />
-
-
-                      <span
-                        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-900"
-                        style={{
-                          background:
-                            "linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 45%, rgba(255,255,255,0) 100%)",
-                          transform: "skewX(-20deg)",
-                        }}
+                        className="w-full h-56 sm:h-64 object-cover transition-transform duration-[900ms] group-hover:scale-[1.08]"
+                        onError={(e) => (e.currentTarget.src = logo_Yoquet)}
                       />
                     </div>
 
                     <div className="p-4 text-left">
-                      <h3 className="text-[#ffcc33] font-semibold leading-tight line-clamp-1">
+                      <h3 className="text-[#ffcc33] font-semibold line-clamp-1">
                         {p.nombre}
                       </h3>
-                      <p className="text-[#ff1d8e] font-medium mt-1">
-                        ${p.precio}
-                      </p>
+                      <p className="text-[#ff1d8e] font-medium mt-1">${p.precio}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -426,8 +317,10 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* ====== FOOTER PROFESIONAL ====== */}
-        <div className="relative z-[30] mt-20 mb-10 text-center text-white/70 text-xs">
+        {/* ======================================================
+           FOOTER CENTRADO
+        ====================================================== */}
+        <div className="relative z-[30] mt-28 mb-10 text-center text-white/70 text-xs flex flex-col items-center">
           © {new Date().getFullYear()} Yoquet Diseños — Estilo que celebra 🎉
           <br />
           <span className="text-[10px] text-white/50 tracking-wide">
@@ -436,12 +329,13 @@ export default function Home() {
           </span>
         </div>
 
-        {/* ⭐ Firma visual conurbaDEV, fija y sutil */}
-        <div className="fixed bottom-4 left-4 z-40 hidden xs:flex sm:flex items-center gap-2 px-3 py-1 conurba-chip text-[10px] uppercase tracking-[0.18em]">
+        {/* CHIP conurbaDEV centrado abajo */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 
+        hidden xs:flex sm:flex items-center gap-2 px-3 py-1 conurba-chip 
+        text-[10px] uppercase tracking-[0.18em]">
           <span className="w-2 h-2 rounded-full bg-[#ffd85a] conurba-pulse-dot" />
           <span className="font-semibold text-white/80">conurbaDEV</span>
         </div>
-
       </motion.div>
     </>
   );
