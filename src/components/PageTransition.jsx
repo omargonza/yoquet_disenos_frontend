@@ -38,8 +38,7 @@ export default function PageTransition({ children }) {
           >
             {/* LOGO — suave, sin loops */}
             <motion.img
-              src="/splash.png" 
-
+              src={logo_Yoquet}
               alt="Yoquet Diseños"
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 0.9, scale: 1 }}
