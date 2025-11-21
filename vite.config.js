@@ -1,33 +1,63 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
-// Detecta el modo actual
+// Detecta modo actual
 const mode = process.env.NODE_ENV || "development";
 const isProd = mode === "production";
 
-// 🔧 CONFIGURACIÓN
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
 
-  // 👉 Para Render o cualquier hosting estático: siempre base './'
-  // (GitHub Pages necesita la ruta del repo, Render no)
+    // ⭐ PWA súper liviana
+    VitePWA({
+      registerType: "autoUpdate",
+
+      includeAssets: [
+        "icon_192.png",
+        "icon_512.png",
+        "logo_Yoquet.png"
+      ],
+
+      manifest: {
+        name: "Yoquet Diseños",
+        short_name: "Yoquet",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#ffffff",
+        icons: [
+          {
+            src: "icon_192.png",
+            sizes: "192x192",
+            type: "image/png"
+          },
+          {
+            src: "icon_512.png",
+            sizes: "512x512",
+            type: "image/png"
+          }
+        ]
+      }
+    })
+  ],
+
+  // Render usa rutas relativas
   base: isProd ? "./" : "/",
 
   server: {
     port: 5173,
-    // 🔁 Proxy local para desarrollo (API de Django)
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000", // backend local
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
         secure: false,
       },
     },
   },
 
-  // 🔍 Mostrar errores legibles en modo build
   build: {
     sourcemap: true,
   },
 });
-
