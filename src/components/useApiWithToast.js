@@ -1,29 +1,52 @@
 import axios from "axios";
 import { useToast } from "../context/ToastContext";
 
-/**
- * 🎨 Hook universal para peticiones con feedback visual (toasts)
- * Incluye manejo automático de tokens JWT y mensajes animados.
- *
- * Ejemplo:
- *   const { request } = useApiWithToast();
- *   await request("post", "/api/productos/", data, "Producto creado 🎉", "Error al crear");
- */
+// ⏳ Timeout global para evitar "requests colgados"
+const TIMEOUT = 12000; // 12s
+
+// 🛡 Anti-spam (rate-limit por hook)
+let lastCall = 0;
+
 export function useApiWithToast() {
   const { showToast } = useToast();
 
-  // 🌐 URL base configurable desde entorno o fallback local
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
-  /**
-   * 🧩 Función principal de request
-   * @param {string} method - HTTP method: get, post, put, delete, etc.
-   * @param {string} endpoint - Ruta relativa, ej: "/api/productos/"
-   * @param {object|null} data - Cuerpo de la petición
-   * @param {string} successMsg - Mensaje de éxito para mostrar en Toast
-   * @param {string} errorMsg - Mensaje de error opcional
-   */
+  // 🧽 Sanitiza strings (evita XSS en parámetros)
+  const sanitize = (value) => {
+    if (typeof value !== "string") return value;
+    return value
+      .replace(/<script.*?>.*?<\/script>/gi, "")
+      .replace(/javascript:/gi, "")
+      .trim();
+  };
+
+  const sanitizeData = (data) => {
+    if (!data || typeof data !== "object") return data;
+    const clean = {};
+    for (const k in data) clean[k] = sanitize(data[k]);
+    return clean;
+  };
+
+  // 🔁 Refresh Token seguro
+  const refreshToken = async () => {
+    try {
+      const refresh = localStorage.getItem("refresh_token");
+      if (!refresh) return null;
+
+      const res = await axios.post(`${backendURL}/api/token/refresh/`, {
+        refresh,
+      });
+
+      localStorage.setItem("access_token", res.data.access);
+      return res.data.access;
+    } catch {
+      return null;
+    }
+  };
+
+  // 🚀 Request principal + capa de seguridad
   const request = async (
     method,
     endpoint,
@@ -31,32 +54,71 @@ export function useApiWithToast() {
     successMsg = "",
     errorMsg = ""
   ) => {
-    try {
-      // 🔐 Incluye token JWT si existe
-      const token = localStorage.getItem("access_token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    // 🛡 Anti-rate-limit: evita spam de requests en mobile
+    const now = Date.now();
+    if (now - lastCall < 450) {
+      showToast("Espera un momento… ⚠️", "error");
+      throw new Error("Rate-limited");
+    }
+    lastCall = now;
 
-      // 🚀 Petición con Axios
+    // 🔐 Token seguro
+    let token = localStorage.getItem("access_token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    // 🧽 Sanitizo el body para evitar XSS
+    const cleanData = sanitizeData(data);
+
+    // 🎯 Validación fuerte de inputs del hook
+    if (typeof method !== "string")
+      throw new Error("El método HTTP debe ser string");
+    if (!endpoint.startsWith("/"))
+      throw new Error("El endpoint debe comenzar con /");
+
+    try {
       const res = await axios({
         method,
         url: `${backendURL}${endpoint}`,
-        data,
+        data: cleanData,
         headers,
+        timeout: TIMEOUT,
       });
 
-      // ✅ Éxito visual con mensaje festivo
-      if (successMsg)
-        showToast(successMsg, "celebration"); // estilo más alegre del ToastContext
-
+      if (successMsg) showToast(successMsg, "success");
       return res.data;
     } catch (error) {
-      console.error("❌ Error en request:", error);
+      // 🔄 401 = token expiró → intento refresh AUTOMÁTICO
+      if (error?.response?.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          // Reintenta request UNA vez
+          try {
+            const retryRes = await axios({
+              method,
+              url: `${backendURL}${endpoint}`,
+              data: cleanData,
+              headers: { Authorization: `Bearer ${newToken}` },
+              timeout: TIMEOUT,
+            });
 
-      // ⚠️ Mensaje visual coherente con estilo global
+            if (successMsg) showToast(successMsg, "success");
+            return retryRes.data;
+          } catch {
+            /* cae al manejo normal */
+          }
+        }
+
+        // 🔐 Si refresh falla → logout seguro
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        showToast("Sesión expirada 🔒. Iniciá sesión nuevamente.", "error");
+      }
+
+      // ⚠️ Mensaje de error amigable y no revelador
       const msg =
         error.response?.data?.detail ||
         errorMsg ||
-        "Ocurrió un error inesperado 💥";
+        "Algo salió mal. Intentá nuevamente ⚠️";
 
       showToast(msg, "error");
 

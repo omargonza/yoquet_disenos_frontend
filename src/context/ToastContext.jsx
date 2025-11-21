@@ -6,77 +6,56 @@ const ToastContext = createContext();
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  // ✨ Muestra un toast (limitamos a 3 simultáneos para evitar saturación)
   const showToast = (message, type = "info") => {
     const id = Date.now();
-    setToasts((prev) => {
-      const updated = [...prev, { id, message, type }];
-      return updated.slice(-3); // mantiene los últimos 3
-    });
-    setTimeout(() => removeToast(id), 3500);
+    setToasts((prev) => [...prev.slice(-2), { id, message, type }]); // Máx. 3 toasts
+    setTimeout(() => removeToast(id), 3000);
   };
 
-  const removeToast = (id) => {
+  const removeToast = (id) =>
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      {/* 📍 Contenedor superior con alineación en cascada */}
-      <div className="fixed top-6 right-6 z-[300] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none">
+      {/* Contenedor */}
+      <div className="fixed top-5 right-5 z-[300] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none">
         <AnimatePresence>
-          {toasts.map((toast, index) => (
+          {toasts.map((toast) => (
             <motion.div
               key={toast.id}
-              initial={{ opacity: 0, y: -20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.95 }}
-              transition={{
-                duration: 0.35,
-                ease: "easeOut",
-                delay: index * 0.07, // ⚡ cascada fluida
-              }}
-              layout // organiza la animación entre toasts suavemente
-              className={`relative flex items-center justify-between gap-3 rounded-xl shadow-md px-5 py-3 border font-medium text-sm backdrop-blur-lg pointer-events-auto transition-all
-                ${
-                  toast.type === "success"
-                    ? "bg-[#fff8e2]/90 border-[#d4b978]/70 text-[#3f3524]"
-                    : toast.type === "error"
-                    ? "bg-[#fceaea]/95 border-[#f1a0a3]/70 text-[#6b2020]"
-                    : "bg-[#f7f6f2]/95 border-[#e0d3aa]/60 text-[#3f3524]"
-                }`}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className={`pointer-events-auto shadow-md rounded-xl px-4 py-3 border 
+                          text-sm font-medium flex items-center justify-between
+                          
+                          ${
+                            toast.type === "success"
+                              ? "bg-white text-[#3d2b1f] border-[#ffd85a]/50"
+                              : toast.type === "error"
+                              ? "bg-[#ffe5e5] text-[#6b2020] border-[#ff8a8a]/50"
+                              : "bg-white text-[#3d2b1f] border-[#d4b978]/40"
+                          }`}
             >
-              <div className="flex items-center gap-2">
-                {toast.type === "success" && <span className="text-lg">✅</span>}
-                {toast.type === "error" && <span className="text-lg">⚠️</span>}
-                {toast.type === "info" && <span className="text-lg">💬</span>}
-                <p className="leading-tight">{toast.message}</p>
-              </div>
+              <span>
+                {toast.type === "success" && "✨ "}
+                {toast.type === "error" && "⚠️ "}
+                {toast.message}
+              </span>
 
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-base font-semibold opacity-60 hover:opacity-100 transition"
+                className="ml-3 text-lg font-bold opacity-50 hover:opacity-100 transition"
               >
                 ×
               </button>
 
-              {/* ✨ Glow dorado solo en success */}
+              {/* Micro-brillo pastel (ultraliviano) */}
               {toast.type === "success" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: [0, 0.45, 0],
-                    scale: [0.95, 1.05, 1],
-                  }}
-                  transition={{
-                    duration: 1.6,
-                    ease: "easeInOut",
-                    repeat: 0,
-                  }}
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#d4b978]/40 via-transparent to-[#d4b978]/40 blur-lg pointer-events-none"
-                />
+                <div className="absolute inset-0 rounded-xl pointer-events-none opacity-10 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]" />
               )}
             </motion.div>
           ))}

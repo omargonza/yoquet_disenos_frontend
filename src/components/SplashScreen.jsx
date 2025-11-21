@@ -1,68 +1,11 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import logo_Yoquet from "../assets/logo_Yoquet.png";
 
-// y luego usarlo:
-
-
-
 export default function SplashScreen({ onFinish }) {
-  const canvasRef = useRef(null);
-
-  // ✨ Partículas metálicas flotantes
+  // Duración total muy corta
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const colors = [
-      "rgba(255,215,120,0.3)",
-      "rgba(255,102,179,0.25)",
-      "rgba(66,226,184,0.25)",
-      "rgba(180,220,250,0.2)",
-    ];
-
-    let particles = [];
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      particles = Array.from({ length: 40 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 2 + 0.5,
-        dx: (Math.random() - 0.5) * 0.4,
-        dy: Math.random() * 0.4 + 0.1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      }));
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        if (p.y > canvas.height) p.y = 0;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.x < 0) p.x = canvas.width;
-      });
-      requestAnimationFrame(draw);
-    };
-
-    resize();
-    draw();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-
-  // 🔄 Duración de la animación del splash
-  useEffect(() => {
-    const timer = setTimeout(() => onFinish?.(), 3000);
+    const timer = setTimeout(() => onFinish?.(), 1100);
     return () => clearTimeout(timer);
   }, [onFinish]);
 
@@ -71,76 +14,32 @@ export default function SplashScreen({ onFinish }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1 }}
-      className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#2b2d33] via-[#4a4c55] to-[#7d808c] overflow-hidden text-white font-[Poppins] z-[9999]"
+      transition={{ duration: 0.35 }}
+      className="fixed inset-0 flex flex-col items-center justify-center
+                 bg-[#2b2d33] text-white font-[Poppins] z-[9999]"
     >
-      {/* 🎨 Animaciones locales */}
-      <style>{`
-        :root{
-          --color-rosa:#ff66b3;
-          --color-dorado:#ffd85a;
-          --color-turquesa:#42e2b8;
-        }
-        @keyframes metalLux {
-          0% { background-position: 0% 50%; opacity: 0.6; }
-          50% { background-position: 100% 50%; opacity: 0.9; }
-          100% { background-position: 0% 50%; opacity: 0.6; }
-        }
-        @keyframes pulseLight {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.08); }
-        }
-        @keyframes sweepGloss {
-          0% { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
-          30% { opacity: 0.8; }
-          100% { transform: translateX(120%) skewX(-20deg); opacity: 0; }
-        }
-      `}</style>
 
-      {/* 🌈 Fondo con reflejos metálicos */}
-      <div
-        className="absolute inset-0 animate-[metalLux_18s_ease-in-out_infinite]"
-        style={{
-          backgroundImage: `
-            linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(212,185,120,0.08) 40%, rgba(255,255,255,0.1) 70%, transparent 100%),
-            radial-gradient(circle at 30% 30%, rgba(255,102,179,0.25), transparent 70%),
-            radial-gradient(circle at 70% 70%, rgba(255,216,90,0.25), transparent 70%),
-            radial-gradient(circle at 50% 90%, rgba(66,226,184,0.25), transparent 70%)
-          `,
-          backgroundSize: "250% 250%",
-          mixBlendMode: "soft-light",
-          filter: "blur(1.5px)",
-        }}
-      />
-
-      {/* ✨ Partículas */}
-      <canvas ref={canvasRef} className="absolute inset-0 -z-10 pointer-events-none" />
-
-      {/* 💎 Logo principal */}
+      {/* LOGO */}
       <motion.img
-        src={logo_Yoquet} 
+        src={logo_Yoquet}
         alt="Yoquet Diseños"
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: [1, 1.06, 1] }}
-        transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
-        className="w-44 sm:w-56 mb-8 drop-shadow-[0_0_25px_rgba(255,255,255,0.35)] animate-[pulseLight_3s_infinite]"
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.45 }}
+        className="w-36 sm:w-44 mb-3"
       />
 
-      {/* 💫 Título animado */}
-      <h1 className="relative text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-[linear-gradient(90deg,var(--color-rosa),var(--color-dorado),var(--color-turquesa))] bg-[length:200%_auto] animate-[metalLux_10s_ease-in-out_infinite] drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]">
-        Yoquet Diseños
-        <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0),rgba(255,255,255,0.35),rgba(255,255,255,0))] animate-[sweepGloss_5s_infinite]" />
-      </h1>
-
-      {/* 🌟 Subtítulo */}
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
+      {/* TÍTULO */}
+      <motion.h1
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 1 }}
-        className="mt-6 text-[#ffd85a] text-lg tracking-wide font-medium"
+        transition={{ delay: 0.25, duration: 0.35 }}
+        className="text-lg sm:text-xl font-semibold bg-gradient-to-r
+                   from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
+                   text-transparent bg-clip-text tracking-wide"
       >
-        Brillá en cada detalle ✨
-      </motion.p>
+        Yoquet Diseños
+      </motion.h1>
     </motion.div>
   );
 }

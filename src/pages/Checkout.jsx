@@ -4,6 +4,22 @@ import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
 import axios from "axios";
 
+/* =========================================================
+   🛡 Sanitización para evitar XSS / HTML injection
+========================================================= */
+const clean = (str) =>
+  String(str || "")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .slice(0, 200);
+
+/* =========================================================
+   VALIDACIONES (extra seguridad del lado del cliente)
+========================================================= */
+const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+const validateName = (n) => /^[a-zA-ZÀ-ÿ0-9\s]{3,40}$/.test(n);
+const validateAddress = (d) => d.length >= 5;
+
 export default function Checkout() {
   const { carrito, totalPrecio, vaciarCarrito } = useCarrito();
   const { showToast } = useToast();
@@ -12,6 +28,10 @@ export default function Checkout() {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
+  const token = localStorage.getItem("access_token");
+
+  const [processing, setProcessing] = useState(false);
+
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
@@ -19,11 +39,9 @@ export default function Checkout() {
     metodoPago: "tarjeta",
   });
 
-  const [processing, setProcessing] = useState(false);
-
-  const token = localStorage.getItem("access_token");
-
-  // ⛔ SI NO ESTÁ LOGUEADO → REDIRIGE A LOGIN
+  /* =========================================================
+     Redirecciones de seguridad
+========================================================= */
   useEffect(() => {
     if (!token) {
       showToast("Debés iniciar sesión para finalizar la compra", "error");
@@ -33,21 +51,30 @@ export default function Checkout() {
 
     if (carrito.length === 0) {
       navigate("/productos");
-      return;
     }
   }, [carrito, token, navigate, showToast]);
 
+  /* =========================================================
+     Handlers
+========================================================= */
   const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: clean(e.target.value) });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (processing) return;
 
-    // 🚨 Si no hay token, no permitimos continuar
-    if (!token) {
-      showToast("Debés iniciar sesión para confirmar la compra", "error");
-      navigate("/login", { state: { fromCheckout: true } });
-      return;
+    // 🛡 Validación cliente (anti-bots, anti-manipulación)
+    if (!validateName(formData.nombre)) {
+      return showToast("Nombre inválido", "error");
+    }
+
+    if (!validateEmail(formData.email)) {
+      return showToast("Email inválido", "error");
+    }
+
+    if (!validateAddress(formData.direccion)) {
+      return showToast("Dirección demasiado corta", "error");
     }
 
     setProcessing(true);
@@ -58,20 +85,17 @@ export default function Checkout() {
         {
           items: carrito.map((i) => ({
             id: i.id,
-            cantidad: i.cantidad,
+            cantidad: Number(i.cantidad) || 1,
           })),
-          total: totalPrecio,
+          total: Number(totalPrecio),
           ...formData,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       showToast("Compra realizada con éxito ✨", "success");
       vaciarCarrito();
       navigate("/empaquetando");
-
     } catch (error) {
       console.error(error);
       showToast("No se pudo procesar el pedido", "error");
@@ -80,43 +104,76 @@ export default function Checkout() {
     setProcessing(false);
   };
 
+  /* =========================================================
+     UI — minimalista, fino, rápido
+========================================================= */
   return (
-    <div className="min-h-screen py-16 flex justify-center items-center px-6 bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c]">
-      <div className="bg-white/80 backdrop-blur-2xl p-10 rounded-3xl shadow-xl w-full max-w-3xl">
+    <div className="min-h-screen flex justify-center items-center px-6 py-16 bg-[#2f3034]">
+      <div className="w-full max-w-3xl bg-white/95 rounded-2xl shadow-xl p-10">
 
-        <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-8 
+          bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
+          bg-clip-text text-transparent">
           Finalizá tu compra ✨
         </h1>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
+          {/* NOMBRE */}
+          <div>
+            <label className="font-semibold text-sm mb-1 block">
+              Nombre completo
+            </label>
+            <input
+              name="nombre"
+              required
+              value={formData.nombre}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-[#d4c7a9] bg-white rounded-xl"
+            />
+          </div>
 
-          {["nombre", "email", "direccion"].map((field) => (
-            <div key={field} className={field === "direccion" ? "md:col-span-2" : ""}>
-              <label className="text-sm font-semibold text-[#3f3524] mb-2 block">
-                {field === "nombre" ? "Nombre completo"
-                  : field === "email" ? "Correo electrónico"
-                  : "Dirección"}
-              </label>
+          {/* EMAIL */}
+          <div>
+            <label className="font-semibold text-sm mb-1 block">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              name="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-[#d4c7a9] bg-white rounded-xl"
+            />
+          </div>
 
-              <input
-                type={field === "email" ? "email" : "text"}
-                name={field}
-                required
-                value={formData[field]}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border bg-white/90 border-[#e7dcc5]"
-              />
-            </div>
-          ))}
-
+          {/* DIRECCION */}
           <div className="md:col-span-2">
-            <label className="text-sm font-semibold mb-2 block">Método de pago</label>
+            <label className="font-semibold text-sm mb-1 block">Dirección</label>
+            <input
+              type="text"
+              name="direccion"
+              required
+              value={formData.direccion}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-[#d4c7a9] bg-white rounded-xl"
+            />
+          </div>
+
+          {/* METODO PAGO */}
+          <div className="md:col-span-2">
+            <label className="font-semibold text-sm mb-1 block">
+              Método de pago
+            </label>
             <select
               name="metodoPago"
               value={formData.metodoPago}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-[#e7dcc5] bg-white/90"
+              className="w-full px-4 py-3 border border-[#d4c7a9] bg-white rounded-xl"
             >
               <option value="tarjeta">Tarjeta 💳</option>
               <option value="transferencia">Transferencia 🏦</option>
@@ -126,20 +183,18 @@ export default function Checkout() {
 
           {/* BOTÓN */}
           <button
-            type={token ? "submit" : "button"}
-            onClick={() => {
-              if (!token) navigate("/login", { state: { fromCheckout: true } });
-            }}
+            type="submit"
             disabled={processing}
-            className={`md:col-span-2 mt-6 py-4 rounded-full text-[#1b1b1b] font-semibold
-                        ${processing ? "bg-[#ffd85a]/40" : "bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]"} 
-                        transition-all flex items-center justify-center gap-2`}
+            className={`md:col-span-2 py-4 mt-4 rounded-full font-semibold 
+              text-[#1b1b1b]
+              ${
+                processing
+                  ? "bg-[#ffd85a]/40"
+                  : "bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]"
+              }
+              transition-all`}
           >
-            {processing
-              ? "Procesando..."
-              : !token
-                ? <>🔒 Inicia sesión para comprar</>
-                : "Confirmar compra ✨"}
+            {processing ? "Procesando..." : "Confirmar compra ✨"}
           </button>
         </form>
       </div>

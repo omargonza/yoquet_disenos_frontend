@@ -1,10 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useCarrito } from "../context/CarritoContext";
 
-const easing = [0.25, 0.1, 0.25, 1];
+/* ============================================================
+   🔐 Sanitización fuerte contra XSS / injection
+============================================================ */
+const sanitizeText = (str) => {
+  if (!str) return "";
+  return String(str)
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .slice(0, 500);
+};
+
+const sanitizeImg = (url) => {
+  if (!url) return "/fallback.webp";
+  if (!String(url).startsWith("http")) return "/fallback.webp"; // Previene SSRF
+  return url.replace(/["'<>]/g, ""); // evita inyección
+};
 
 export default function ProductoDetalle() {
   const { id } = useParams();
@@ -13,25 +28,22 @@ export default function ProductoDetalle() {
 
   const [producto, setProducto] = useState(null);
   const [error, setError] = useState("");
-  const [estado, setEstado] = useState({
-    agregado: false,
-    vuelo: false,
-    pulso: false,
-    rayo: false,
-    destelloPrecio: false,
-  });
+  const [agregado, setAgregado] = useState(false);
 
   const backendURL =
-    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
+    (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(
+      /\/$/,
+      ""
+    );
 
-  /* =========================================================
-     Carga del producto (optimizado)
-     ========================================================= */
+  /* ============================================================
+     🚀 Carga LIVIANA con timeout + seguridad
+============================================================ */
   useEffect(() => {
     let isMounted = true;
 
     axios
-      .get(`${backendURL}/api/productos/${id}/`)
+      .get(`${backendURL}/api/productos/${id}/`, { timeout: 6000 })
       .then((res) => {
         if (isMounted) setProducto(res.data);
       })
@@ -40,33 +52,21 @@ export default function ProductoDetalle() {
     return () => {
       isMounted = false;
     };
-  }, [id, backendURL]);
+  }, [id]);
 
-  /* =========================================================
-     Manejar agregar al carrito (1 solo update → super eficiente)
-     ========================================================= */
+  /* ============================================================
+     🛒 Agregar al carrito (mínimo re-render)
+============================================================ */
   const handleAdd = useCallback(() => {
     if (!producto) return;
-
     agregarAlCarrito(producto);
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 1500);
+  }, [producto]);
 
-    setEstado({
-      agregado: true,
-      vuelo: true,
-      pulso: true,
-      rayo: true,
-      destelloPrecio: true,
-    });
-
-    setTimeout(() => setEstado((s) => ({ ...s, vuelo: false })), 900);
-    setTimeout(() => setEstado((s) => ({ ...s, pulso: false })), 900);
-    setTimeout(() => setEstado((s) => ({ ...s, rayo: false })), 700);
-    setTimeout(() => setEstado((s) => ({ ...s, destelloPrecio: false })), 950);
-  }, [producto, agregarAlCarrito]);
-
-  /* =========================================================
+  /* ============================================================
      Loading
-     ========================================================= */
+============================================================ */
   if (error)
     return (
       <p className="text-center text-red-600 mt-10 font-semibold">{error}</p>
@@ -74,150 +74,101 @@ export default function ProductoDetalle() {
 
   if (!producto)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#3b3d45] text-[#d4b978] text-lg">
+      <div className="min-h-screen flex items-center justify-center text-[#ffd85a]">
         Cargando producto...
       </div>
     );
 
-  const imgSrc = producto.imagen || "/fallback.webp";
+  const imgSrc = sanitizeImg(producto.imagen);
 
-  /* =========================================================
-     UI principal — más liviano pero igual de premium
-     ========================================================= */
+  /* ============================================================
+     UI MODELO ULTRA-LIVIANO + PREMIUM
+============================================================ */
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.7 }}
-      className="relative min-h-screen bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c] text-[#e7e6e1] py-16 px-6 sm:px-12 flex items-center justify-center overflow-hidden"
+      transition={{ duration: 0.45 }}
+      className="min-h-screen bg-[#2f3035] text-white px-6 py-14 flex items-center justify-center"
     >
-      {/* CAPAS DE BRILLO — optimizadas sin blur excesivo */}
-      <div className="absolute inset-0 pointer-events-none opacity-60">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,215,120,0.10),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(163,161,255,0.10),transparent_70%)]" />
-      </div>
+      <style>{`
+        .card {
+          background: #ffffff10;
+          border: 1px solid #ffffff22;
+          border-radius: 22px;
+          padding: 2rem;
+          max-width: 960px;
+          width: 100%;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        }
+        .btn-main {
+          background: linear-gradient(90deg,#ff66b3,#ffd85a);
+          padding: 0.9rem 1.5rem;
+          border-radius: 9999px;
+          color:#111;
+          font-weight: 600;
+          text-align:center;
+        }
+        .btn-main:disabled {
+          background:#aaaaaa55;
+          color:#333;
+        }
+        .price {
+          background: linear-gradient(90deg,#ffd85a,#ff66b3);
+          -webkit-background-clip: text;
+          color: transparent;
+          font-weight: 800;
+        }
+      `}</style>
 
-      {/* ⚡ Pulso parabólico SVG — mucho más barato que div+blur */}
-      <AnimatePresence>
-        {estado.pulso && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 0.4, scale: 2 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: easing }}
-            className="absolute w-[80vw] h-[40vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(150,255,220,0.35),transparent_70%)] pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ⚡ RAYO */}
-      <AnimatePresence>
-        {estado.rayo && (
-          <motion.div
-            initial={{ opacity: 0, scaleY: 0.3 }}
-            animate={{ opacity: 0.8, scaleY: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.7, ease: easing }}
-            className="absolute left-1/2 -translate-x-1/2 w-[2px] h-[220px] bg-gradient-to-b from-transparent via-[#b8fff7] to-transparent pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* CARD PRINCIPAL */}
-      <motion.div
-        layoutId={`producto-${producto.id}`}
-        className="relative max-w-5xl w-full backdrop-blur-xl bg-white/5 border border-[#d4b978]/30 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col md:flex-row items-center gap-12 p-10 z-10"
-      >
+      <div className="card flex flex-col md:flex-row gap-10 items-center">
         {/* Imagen */}
-        <motion.div className="relative flex-1 flex justify-center items-center">
+        <div className="w-full md:w-1/2 flex justify-center">
           <motion.img
             src={imgSrc}
-            alt={producto.nombre}
-            className="rounded-[2rem] shadow-md object-cover w-full max-w-md border-[3px] border-[#d4b978]/20"
-            initial={{ scale: 0.92, opacity: 0 }}
+            alt={sanitizeText(producto.nombre)}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.45 }}
+            className="rounded-2xl w-full max-w-md object-cover border border-[#ffffff22]"
+            onError={(e) => (e.currentTarget.src = "/fallback.webp")}
           />
+        </div>
 
-          {/* Vuelo */}
-          <AnimatePresence>
-            {estado.vuelo && (
-              <motion.img
-                src={imgSrc}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{
-                  opacity: 0,
-                  scale: 0.3,
-                  y: -200,
-                  x: 200,
-                }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.9 }}
-                className="absolute w-32 h-32 rounded-xl shadow-lg border border-white/30 pointer-events-none"
-              />
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Información */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex-1 flex flex-col"
-        >
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#b6fff1] via-[#d4b978] to-[#a3a1ff] text-transparent bg-clip-text drop-shadow-lg">
-            {producto.nombre}
+        {/* Info */}
+        <div className="flex-1 flex flex-col text-left">
+          <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] bg-clip-text text-transparent">
+            {sanitizeText(producto.nombre)}
           </h1>
 
-          <p className="text-sm text-[#dcdcdc]/80 mb-2">
-            {producto.categoria?.nombre || "Sin categoría"}
+          <p className="text-sm text-white/70 mb-2">
+            {sanitizeText(producto.categoria?.nombre || "Sin categoría")}
           </p>
 
-          <p className="text-[#f1f1f1]/90 mb-6 leading-relaxed">
-            {producto.descripcion}
+          <p className="text-white/90 mb-6 leading-relaxed">
+            {sanitizeText(producto.descripcion)}
           </p>
 
-          {/* Precio */}
-          <div className="relative mb-8">
-            <p className="text-3xl font-bold bg-gradient-to-r from-[#b6fff1] to-[#a3a1ff] text-transparent bg-clip-text">
-              ${producto.precio}
-            </p>
+          <p className="text-3xl mb-6 price">
+            ${producto.precio}
+          </p>
 
-            <AnimatePresence>
-              {estado.destelloPrecio && (
-                <motion.span
-                  initial={{ x: "-120%" }}
-                  animate={{ x: "120%" }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-[20deg]"
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Botón */}
           <button
             onClick={handleAdd}
-            disabled={estado.agregado}
-            className={`w-full py-4 rounded-full font-semibold transition-all ${
-              estado.agregado
-                ? "bg-[#a3a1ff]/50 text-[#333] cursor-not-allowed"
-                : "bg-gradient-to-r from-[#b6fff1] to-[#a3a1ff] text-[#111] hover:shadow-[0_0_18px_rgba(180,220,250,0.4)]"
-            }`}
+            disabled={agregado}
+            className="btn-main w-full"
           >
-            {estado.agregado ? "Agregado ✔️" : "Agregar al carrito 🛒"}
+            {agregado ? "Agregado ✔️" : "Agregar al carrito 🛒"}
           </button>
 
           <button
             onClick={() => navigate("/productos")}
-            className="mt-8 text-sm text-[#dadada] hover:text-[#b6fff1] transition"
+            className="mt-6 text-sm text-white/70 hover:text-[#ffd85a] transition"
           >
             ← Volver al catálogo
           </button>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </motion.div>
   );
 }
