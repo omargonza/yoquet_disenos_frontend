@@ -5,9 +5,12 @@ import "./index.css";
 import { ToastProvider } from "./context/ToastContext";
 import { CarritoProvider } from "./context/CarritoContext";
 import { AmbientProvider } from "./context/AmbientContext";
+import { registerServiceWorker } from "./registerSW";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter  basename="/">
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+root.render(
+  <BrowserRouter basename="/">
     <AmbientProvider>
       <CarritoProvider>
         <ToastProvider>
@@ -17,3 +20,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </AmbientProvider>
   </BrowserRouter>
 );
+
+// 💡 SW se registra al final, después de renderizar la app
+registerServiceWorker();
