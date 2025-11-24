@@ -6,15 +6,19 @@ import { ToastProvider } from "./context/ToastContext";
 import { CarritoProvider } from "./context/CarritoContext";
 import { AmbientProvider } from "./context/AmbientContext";
 import { registerServiceWorker } from "./registerSW";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <BrowserRouter basename="/">
+   <BrowserRouter basename="/">
     <AmbientProvider>
       <CarritoProvider>
         <ToastProvider>
-          <App />
+          <AdminAuthProvider>
+            <App />
+          </AdminAuthProvider>
         </ToastProvider>
       </CarritoProvider>
     </AmbientProvider>

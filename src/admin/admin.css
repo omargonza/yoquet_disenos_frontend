@@ -1,0 +1,124 @@
+/* =========================================
+   TIPOGRAFÍA & BASE
+   ========================================= */
+:root {
+  --admin-bg: #f5f6fa;
+  --admin-card: #ffffff;
+  --admin-border: #e3e6ee;
+  --admin-text: #2b2b2b;
+  --admin-text-soft: #6d6d6d;
+  --admin-radius: 16px;
+  --admin-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --admin-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.12);
+  --admin-font: 'Inter', 'Poppins', Arial, sans-serif;
+}
+
+/* Fuente general */
+body {
+  font-family: var(--admin-font);
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+/* =========================================
+   CONTENIDO GENERAL
+   ========================================= */
+.admin-container {
+  padding: 20px 24px;
+}
+
+/* Títulos */
+.admin-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1e1e1e;
+}
+
+/* =========================================
+   GRID DE PRODUCTOS
+   ========================================= */
+.grid-productos-admin {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 24px;
+  padding-top: 10px;
+}
+
+/* =========================================
+   TARJETAS
+   ========================================= */
+.card-admin {
+  background: var(--admin-card);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  padding: 14px;
+  text-align: center;
+  border: 1px solid var(--admin-border);
+  transition: 0.25s ease;
+}
+
+/* Hover */
+.card-admin:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--admin-shadow-hover);
+}
+
+/* =========================================
+   IMAGEN
+   ========================================= */
+.card-admin img {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  padding: 6px;
+  background: #fafafa;
+  border: 1px solid #eee;
+}
+
+/* =========================================
+   TEXTO INTERNO
+   ========================================= */
+.card-admin h3 {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e1e1e;
+  line-height: 1.3;
+}
+
+.card-admin p {
+  font-size: 13px;
+  color: var(--admin-text-soft);
+  margin-top: 4px;
+}
+
+/* =========================================
+   PAGINACIÓN
+   ========================================= */
+.admin-pagination {
+  margin-top: 25px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.admin-btn {
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.admin-btn:hover {
+  background: #f0f1f5;
+}
+
+.admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

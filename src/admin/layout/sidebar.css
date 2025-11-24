@@ -1,0 +1,67 @@
+/* ========== SIDEBAR ========== */
+.admin-sidebar {
+  width: 230px;
+  background: #1e1e2f;
+  color: white;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 25px 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+}
+
+.admin-sidebar h2 {
+  font-size: 1.4rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.admin-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-menu li {
+  padding: 12px 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #d1d1e0;
+  transition: background .2s;
+}
+
+.admin-menu li:hover {
+  background: #2a2a40;
+  color: white;
+}
+
+.admin-menu a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* ========== HEADER ========== */
+.admin-header {
+  height: 60px;
+  background: #ffffff;
+  margin-left: 230px;
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ========== CONTENT ========== */
+.admin-content {
+  margin-left: 230px;
+  padding: 30px;
+  min-height: calc(100vh - 60px);
+  background: #f3f4f6;
+}
