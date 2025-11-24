@@ -9,10 +9,10 @@ const api = axios.create({
   },
 });
 
-// Interceptor de token
+// Interceptor único y correcto
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token"); // TOKEN ÚNICO
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
