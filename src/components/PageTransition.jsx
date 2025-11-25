@@ -1,22 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useAmbient } from "../context/AmbientContext";
 import logo_Yoquet from "../assets/logo_Yoquet.png";
 
 export default function PageTransition({ children }) {
   const location = useLocation();
-  const { theme } = useAmbient(); // solo "festival"
   const [showOverlay, setShowOverlay] = useState(false);
 
-  // Cortina de transición (rápida y liviana)
+  // Cortina de transición rápida
   useEffect(() => {
     setShowOverlay(true);
     const timer = setTimeout(() => setShowOverlay(false), 650);
     return () => clearTimeout(timer);
-  }, [location.pathname, theme]);
+  }, [location.pathname]);
 
-  // Fondo minimal y elegante (no animado)
   const metallicBackground =
     "linear-gradient(135deg, #2b2d33, #4a4c55, #7d808c)";
 
@@ -36,7 +33,7 @@ export default function PageTransition({ children }) {
               backgroundSize: "cover",
             }}
           >
-            {/* LOGO — suave, sin loops */}
+            {/* LOGO */}
             <motion.img
               src={logo_Yoquet}
               alt="Yoquet Diseños"
@@ -46,13 +43,13 @@ export default function PageTransition({ children }) {
               className="w-28 sm:w-32 opacity-90"
             />
 
-            {/* Reflejo rápido (solo una vez) */}
+            {/* Reflejo */}
             <motion.div
               initial={{ x: "-120%", opacity: 0 }}
               animate={{ x: "120%", opacity: 0.3 }}
               transition={{ duration: 0.6, ease: "easeInOut", delay: 0.1 }}
               className="absolute inset-0 bg-gradient-to-r 
-                         from-transparent via-white/25 to-transparent"
+                from-transparent via-white/25 to-transparent"
               style={{
                 transform: "skewX(-20deg)",
                 pointerEvents: "none",
@@ -62,7 +59,7 @@ export default function PageTransition({ children }) {
         )}
       </AnimatePresence>
 
-      {/* Transición suave entre pantallas */}
+      {/* Transición entre páginas */}
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0, y: 15 }}

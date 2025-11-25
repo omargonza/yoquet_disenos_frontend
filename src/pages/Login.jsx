@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { useToast } from "../context/ToastContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../utils/api"; // ✔ AHORA CORRECTO
-
+import { useAuth } from "../context/AuthContext";
 import logo_Yoquet from "../assets/logo_Yoquet.png";
-import login from "../assets/login.jpg";
+import loginImg from "../assets/login.jpg";
+
 
 export default function Login() {
   const { showToast } = useToast();
+  const { login } = useAuth();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/productos";
+   
 
   /* =========================================================
      VALIDACIÓN MÍNIMA DE INPUTS (anti-XSS básico)
@@ -36,12 +42,15 @@ export default function Login() {
       });
 
       // Guardar tokens correctamente
-      localStorage.setItem("access_token", res.data.access);
-      localStorage.setItem("refresh_token", res.data.refresh);
+      // localStorage.setItem("access_token", res.data.access);
+      //localStorage.setItem("refresh_token", res.data.refresh);
+     
+    login(res.data.access, res.data.refresh);
 
       showToast(`Bienvenido, ${cleanText(username)} ✨`, "success");
 
-      setTimeout(() => navigate("/productos"), 900);
+       // Redirección inteligente:
+      setTimeout(() => navigate(from, { replace: true }), 900);
     } catch {
       setError("Usuario o contraseña incorrectos");
       showToast("Credenciales incorrectos", "error");
@@ -162,7 +171,7 @@ export default function Login() {
       {/* IMAGEN */}
       <div className="hidden md:flex w-1/2 relative">
         <img
-          src={login}
+          src={loginImg}
           alt="decorativo"
           className="w-full h-full object-cover opacity-70"
         />

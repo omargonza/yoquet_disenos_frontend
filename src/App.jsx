@@ -8,6 +8,7 @@ import Productos from "./pages/Productos";
 import ProductoDetalle from "./pages/ProductoDetalle";
 import Carrito from "./pages/Carrito";
 import CartButton from "./components/CartButton";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Checkout from "./pages/Checkout";
 import Confirmacion from "./pages/Confirmacion";
 import Empaquetando from "./pages/Empaquetando";
@@ -18,13 +19,11 @@ import PageTransition from "./components/PageTransition";
 import Register from "./pages/Register";
 import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import ResetPasswordRequest from "./pages/ResetPasswordRequest";
-import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetSuccess from "./pages/ResetSuccess";
-
 import GestionPanel from "./pages/GestionPanel";
 
-// PANEL ADMIN
+// ADMIN
 import AdminDashboard from "./admin/pages/AdminDashboard";
 import ProductosAdmin from "./admin/pages/ProductosAdmin";
 import CategoriasAdmin from "./admin/pages/CategoriasAdmin";
@@ -33,18 +32,12 @@ import AdminLayout from "./admin/layout/AdminLayout";
 import ProductoEditarAdmin from "./admin/pages/ProductoEditarAdmin";
 import RequireAdmin from "./admin/components/RequireAdmin";
 
-import { useAmbient } from "./context/AmbientContext";
+import { useAuth } from "./context/AuthContext";
+import LogoutButton from "./components/LogoutButton";
 
 export default function App() {
-  const { theme, switchTheme, autoMode, setAutoMode } = useAmbient();
   const [showSplash, setShowSplash] = useState(true);
-
-  const icons = {
-    morning: "☀️",
-    afternoon: "🌇",
-    night: "🌙",
-    festival: "🎉",
-  };
+  const { token } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 3000);
@@ -68,7 +61,16 @@ export default function App() {
               <Route path="/productos" element={<Productos />} />
               <Route path="/productos/:id" element={<ProductoDetalle />} />
               <Route path="/carrito" element={<Carrito />} />
-              <Route path="/checkout" element={<Checkout />} />
+
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route path="/confirmacion" element={<Confirmacion />} />
               <Route path="/empaquetando" element={<Empaquetando />} />
               <Route path="/despedida" element={<Despedida />} />
@@ -76,7 +78,10 @@ export default function App() {
               {/* AUTH */}
               <Route path="/register" element={<Register />} />
               <Route path="/reset" element={<ResetPasswordRequest />} />
-              <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
+              <Route
+                path="/reset-password/:uid/:token"
+                element={<ResetPasswordConfirm />}
+              />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-success" element={<ResetSuccess />} />
 
@@ -100,46 +105,20 @@ export default function App() {
           </PageTransition>
 
           {/* =============================== */}
-          {/* CARRITO + THEMES (no admin) */}
+          {/*     BOTÓN LOGOUT + CARRITO      */}
           {/* =============================== */}
+
           {!window.location.pathname.startsWith("/admin") && (
             <>
-              <CartButton />
-
-              <div
-                className="fixed bottom-6 right-6 z-[999] flex items-center gap-3
-                bg-white/20 backdrop-blur-md border border-white/30
-                shadow-[0_4px_25px_rgba(255,216,90,0.3)]
-                rounded-full px-3 py-2 transition-all duration-500"
-              >
-                <button
-                  onClick={() => setAutoMode(!autoMode)}
-                  className={`text-xs font-semibold px-2 py-1 rounded-full transition-all 
-                  ${autoMode
-                      ? "bg-gradient-to-r from-[#ffd85a] to-[#42e2b8] text-[#1b1b1d] shadow-md"
-                      : "bg-transparent text-[#fffaf2] border border-[#ffd85a]/40 hover:bg-[#ffd85a]/20"
-                    }`}
-                >
-                  {autoMode ? "Auto" : "Manual"}
-                </button>
-
-                <div className="flex gap-2">
-                  {Object.entries(icons).map(([key, icon]) => (
-                    <button
-                      key={key}
-                      onClick={() => switchTheme(key)}
-                      className={`text-xl transition-all transform 
-                      ${theme === key
-                          ? "scale-125 text-[#ffd85a] drop-shadow-[0_0_8px_rgba(255,216,90,0.6)]"
-                          : "opacity-70 hover:opacity-100 text-white"
-                        }`}
-                      title={key}
-                    >
-                      {icon}
-                    </button>
-                  ))}
+              {/* LOGOUT IZQUIERDA */}
+              {token && (
+                <div className="fixed top-6 left-6 z-[999]">
+                  <LogoutButton />
                 </div>
-              </div>
+              )}
+
+              {/* CARRITO DERECHA */}
+              <CartButton />
             </>
           )}
 
@@ -148,4 +127,3 @@ export default function App() {
     </AnimatePresence>
   );
 }
-// build fix

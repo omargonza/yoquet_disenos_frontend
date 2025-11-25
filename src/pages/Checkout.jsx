@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
-import axios from "axios";
+import api from "../utils/api";   // ✔ USO DEL API GLOBAL
 
 /* =========================================================
    🛡 Sanitización para evitar XSS / HTML injection
@@ -14,7 +14,7 @@ const clean = (str) =>
     .slice(0, 200);
 
 /* =========================================================
-   VALIDACIONES (extra seguridad del lado del cliente)
+   VALIDACIONES (extra seguridad)
 ========================================================= */
 const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
 const validateName = (n) => /^[a-zA-ZÀ-ÿ0-9\s]{3,40}$/.test(n);
@@ -24,9 +24,6 @@ export default function Checkout() {
   const { carrito, totalPrecio, vaciarCarrito } = useCarrito();
   const { showToast } = useToast();
   const navigate = useNavigate();
-
-  const backendURL =
-    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
   const token = localStorage.getItem("access_token");
 
@@ -40,19 +37,14 @@ export default function Checkout() {
   });
 
   /* =========================================================
-     Redirecciones de seguridad
+     VALIDACIÓN 1: Si el CARRITO está vacío → volver a productos
+     (la verificación de login la hace ProtectedRoute)
 ========================================================= */
   useEffect(() => {
-    if (!token) {
-      showToast("Debés iniciar sesión para finalizar la compra", "error");
-      navigate("/login", { state: { fromCheckout: true } });
-      return;
-    }
-
     if (carrito.length === 0) {
       navigate("/productos");
     }
-  }, [carrito, token, navigate, showToast]);
+  }, [carrito, navigate]);
 
   /* =========================================================
      Handlers
@@ -64,34 +56,27 @@ export default function Checkout() {
     e.preventDefault();
     if (processing) return;
 
-    // 🛡 Validación cliente (anti-bots, anti-manipulación)
-    if (!validateName(formData.nombre)) {
+    // 🛡 Validaciones previas
+    if (!validateName(formData.nombre))
       return showToast("Nombre inválido", "error");
-    }
 
-    if (!validateEmail(formData.email)) {
+    if (!validateEmail(formData.email))
       return showToast("Email inválido", "error");
-    }
 
-    if (!validateAddress(formData.direccion)) {
+    if (!validateAddress(formData.direccion))
       return showToast("Dirección demasiado corta", "error");
-    }
 
     setProcessing(true);
 
     try {
-      await axios.post(
-        `${backendURL}/api/pedido/crear/`,
-        {
-          items: carrito.map((i) => ({
-            id: i.id,
-            cantidad: Number(i.cantidad) || 1,
-          })),
-          total: Number(totalPrecio),
-          ...formData,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/api/pedido/crear/", {
+        items: carrito.map((i) => ({
+          id: i.id,
+          cantidad: Number(i.cantidad) || 1,
+        })),
+        total: Number(totalPrecio),
+        ...formData,
+      });
 
       showToast("Compra realizada con éxito ✨", "success");
       vaciarCarrito();
@@ -105,15 +90,17 @@ export default function Checkout() {
   };
 
   /* =========================================================
-     UI — minimalista, fino, rápido
+     UI —  ESTILO
 ========================================================= */
   return (
     <div className="min-h-screen flex justify-center items-center px-6 py-16 bg-[#2f3034]">
       <div className="w-full max-w-3xl bg-white/95 rounded-2xl shadow-xl p-10">
 
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-8 
+        <h1
+          className="text-3xl sm:text-4xl font-extrabold text-center mb-8 
           bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
-          bg-clip-text text-transparent">
+          bg-clip-text text-transparent"
+        >
           Finalizá tu compra ✨
         </h1>
 

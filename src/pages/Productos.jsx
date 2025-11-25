@@ -146,7 +146,15 @@ export default function Productos() {
   /* ============================================================
      UI
 ============================================================ */
+
   return (
+    <div
+    className="min-h-screen"
+    style={{
+      backgroundImage: "linear-gradient(135deg, #2b2d33, #4a4c55, #7d808c)",
+      backgroundSize: "cover",
+    }}
+  >
     <motion.div
       variants={fade}
       initial="hidden"
@@ -259,6 +267,7 @@ export default function Productos() {
         </div>
       </div>
     </motion.div>
+    </div>
   );
 }
 

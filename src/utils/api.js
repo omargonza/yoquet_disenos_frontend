@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-// Instancia global
+// Instancia global sin withCredentials
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -9,10 +9,10 @@ const api = axios.create({
   },
 });
 
-// Interceptor único y correcto
+// Interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token"); // TOKEN ÚNICO
+    const token = localStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
