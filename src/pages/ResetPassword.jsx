@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
-import axios from "axios";
+import api from "../utils/api";
 
 export default function ResetPassword() {
   const { uid, token } = useParams();
@@ -11,9 +11,6 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const backendURL = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000")
-    .replace(/\/$/, "");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +28,7 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${backendURL}/api/auth/password-reset-confirm/`, {
+      await api.post("/api/auth/password-reset-confirm/", {
         uid,
         token,
         password,
@@ -39,9 +36,7 @@ export default function ResetPassword() {
 
       showToast("Contraseña actualizada ✔️", "success");
 
-      // Redirección elegante
       setTimeout(() => navigate("/reset-success"), 1000);
-
     } catch (error) {
       console.error(error);
       showToast("Enlace inválido o expirado ❌", "error");
@@ -67,9 +62,7 @@ export default function ResetPassword() {
           Ingresá tu nueva contraseña para recuperar acceso a tu cuenta ✨
         </p>
 
-        {/* FORMULARIO */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
           <div>
             <label className="text-sm text-[#ffeccb] font-medium mb-1 block">
               Nueva contraseña
@@ -110,9 +103,7 @@ export default function ResetPassword() {
                        shadow-lg hover:scale-[1.03] transition-all">
             {loading ? "Procesando..." : "Guardar contraseña ✨"}
           </button>
-
         </form>
-
       </div>
     </div>
   );

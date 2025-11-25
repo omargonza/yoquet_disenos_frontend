@@ -1,6 +1,6 @@
 from django.urls import path
 from .views_api import EscanearView
-from .views_api import PendientesView  # si ya la tenés
+from .views_api import PendientesView  
 
 urlpatterns = [
     path("escanear/", EscanearView.as_view()),

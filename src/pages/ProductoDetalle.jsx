@@ -1,24 +1,21 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { motion } from "framer-motion";
+import api from "../utils/api"; 
 import { useCarrito } from "../context/CarritoContext";
 
-/* ============================================================
-   🔐 Sanitización fuerte contra XSS / injection
-============================================================ */
-const sanitizeText = (str) => {
-  if (!str) return "";
-  return String(str)
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .slice(0, 500);
-};
+// ============================================================
+// Sanitización mínima y suficiente
+// ============================================================
+const sanitizeText = (str) =>
+  typeof str === "string"
+    ? str.replace(/</g, "&lt;").replace(/>/g, "&gt;").slice(0, 500)
+    : "";
 
 const sanitizeImg = (url) => {
-  if (!url) return "/fallback.webp";
-  if (!String(url).startsWith("http")) return "/fallback.webp"; // Previene SSRF
-  return url.replace(/["'<>]/g, ""); // evita inyección
+  if (!url || typeof url !== "string") return "/fallback.webp";
+  if (!url.startsWith("http")) return "/fallback.webp";
+  return url.replace(/["'<>]/g, "");
 };
 
 export default function ProductoDetalle() {
@@ -30,43 +27,40 @@ export default function ProductoDetalle() {
   const [error, setError] = useState("");
   const [agregado, setAgregado] = useState(false);
 
-  const backendURL =
-    (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(
-      /\/$/,
-      ""
-    );
-
-  /* ============================================================
-     🚀 Carga LIVIANA con timeout + seguridad
-============================================================ */
+  // ============================================================
+  // Cargar producto
+  // ============================================================
   useEffect(() => {
     let isMounted = true;
 
-    axios
-      .get(`${backendURL}/api/productos/${id}/`, { timeout: 6000 })
+    api
+      .get(`/api/productos/${id}/`)
       .then((res) => {
         if (isMounted) setProducto(res.data);
       })
-      .catch(() => setError("No se pudo cargar el producto"));
+      .catch(() => {
+        if (isMounted) setError("No se pudo cargar el producto");
+      });
 
     return () => {
       isMounted = false;
     };
   }, [id]);
 
-  /* ============================================================
-     🛒 Agregar al carrito (mínimo re-render)
-============================================================ */
+  // ============================================================
+  // Agregar al carrito
+  // ============================================================
   const handleAdd = useCallback(() => {
     if (!producto) return;
+
     agregarAlCarrito(producto);
     setAgregado(true);
     setTimeout(() => setAgregado(false), 1500);
   }, [producto]);
 
-  /* ============================================================
-     Loading
-============================================================ */
+  // ============================================================
+  // Loading
+  // ============================================================
   if (error)
     return (
       <p className="text-center text-red-600 mt-10 font-semibold">{error}</p>
@@ -81,9 +75,9 @@ export default function ProductoDetalle() {
 
   const imgSrc = sanitizeImg(producto.imagen);
 
-  /* ============================================================
-     UI MODELO ULTRA-LIVIANO + PREMIUM
-============================================================ */
+  // ============================================================
+  // UI FINAL
+  // ============================================================
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -149,9 +143,7 @@ export default function ProductoDetalle() {
             {sanitizeText(producto.descripcion)}
           </p>
 
-          <p className="text-3xl mb-6 price">
-            ${producto.precio}
-          </p>
+          <p className="text-3xl mb-6 price">${producto.precio}</p>
 
           <button
             onClick={handleAdd}

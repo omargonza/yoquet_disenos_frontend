@@ -1,22 +1,26 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useToast } from "../context/ToastContext";
 
 export default function ResetPasswordRequest() {
   const { showToast } = useToast();
-  const backend = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      await axios.post(`${backend}/api/auth/password-reset/`, { email });
+      await api.post("/api/auth/password-reset/", { email });
+
       showToast("Si el correo existe, enviamos un enlace 💌", "success");
     } catch (err) {
-      showToast("Error al solicitar el reinicio", "error");
+      console.error(err);
+      showToast("Error al solicitar el reinicio ❌", "error");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -36,8 +40,11 @@ export default function ResetPasswordRequest() {
             required
           />
 
-          <button className="w-full bg-[#ffd85a] text-black py-3 rounded-lg font-semibold hover:bg-[#ffcd2e] transition">
-            Enviar enlace 💌
+          <button
+            disabled={loading}
+            className="w-full bg-[#ffd85a] text-black py-3 rounded-lg font-semibold hover:bg-[#ffcd2e] transition"
+          >
+            {loading ? "Enviando..." : "Enviar enlace 💌"}
           </button>
         </form>
       </div>

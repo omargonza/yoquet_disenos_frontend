@@ -1,27 +1,34 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
+import api from "../utils/api";
 
 export default function ResetPasswordConfirm() {
   const { uid, token } = useParams();
   const navigate = useNavigate();
-  const backend = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
   const { showToast } = useToast();
 
   const [pass1, setPass1] = useState("");
   const [pass2, setPass2] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (pass1 !== pass2) {
-      showToast("Las contraseñas no coinciden", "error");
+      showToast("Las contraseñas no coinciden ❌", "error");
       return;
     }
 
+    if (pass1.length < 6) {
+      showToast("La contraseña debe tener al menos 6 caracteres", "error");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await axios.post(`${backend}/api/auth/password-reset-confirm/`, {
+      await api.post("/api/auth/password-reset-confirm/", {
         uid,
         token,
         password: pass1,
@@ -32,8 +39,11 @@ export default function ResetPasswordConfirm() {
       setTimeout(() => navigate("/login"), 1200);
 
     } catch (err) {
-      showToast("Error al actualizar la contraseña", "error");
+      console.error(err);
+      showToast("Error al actualizar la contraseña ❌", "error");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -63,8 +73,11 @@ export default function ResetPasswordConfirm() {
             required
           />
 
-          <button className="w-full bg-[#42e2b8] text-black py-3 rounded-lg font-semibold hover:bg-[#20d3a6] transition">
-            Actualizar ✔️
+          <button
+            disabled={loading}
+            className="w-full bg-[#42e2b8] text-black py-3 rounded-lg font-semibold hover:bg-[#20d3a6] transition"
+          >
+            {loading ? "Procesando..." : "Actualizar ✔️"}
           </button>
         </form>
       </div>

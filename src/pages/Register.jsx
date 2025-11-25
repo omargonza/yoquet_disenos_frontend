@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useToast } from "../context/ToastContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";   // ✔ CORRECTO — ÚNICA INSTANCIA
 
 export default function Register() {
   const { showToast } = useToast();
@@ -13,14 +13,14 @@ export default function Register() {
     password: "",
   });
 
-  const backendURL =
-    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-
+  /* =========================================================
+     MANEJAR REGISTRO (USANDO API GLOBAL)
+  ========================================================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      await axios.post(`${backendURL}/api/auth/register/`, form);
+      await api.post("/api/auth/register/", form);  // ✔ CORRECTO
       showToast("Cuenta creada con éxito ✨", "success");
       navigate("/login");
     } catch (err) {
@@ -29,6 +29,9 @@ export default function Register() {
     }
   };
 
+  /* =========================================================
+     UI — TODO TU DISEÑO ORIGINAL
+  ========================================================= */
   return (
     <div className="min-h-screen flex items-center justify-center px-6
                     bg-gradient-to-br from-[#3b3d45] via-[#5c5f6a] to-[#7d808c] text-white">
@@ -46,7 +49,9 @@ export default function Register() {
             placeholder="Usuario"
             required
             value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, username: e.target.value })
+            }
             className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"
           />
 
@@ -55,7 +60,9 @@ export default function Register() {
             placeholder="Correo"
             required
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, email: e.target.value })
+            }
             className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"
           />
 
@@ -64,7 +71,9 @@ export default function Register() {
             placeholder="Contraseña"
             required
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, password: e.target.value })
+            }
             className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"
           />
 
@@ -78,7 +87,8 @@ export default function Register() {
 
         <p className="text-center text-sm mt-4 text-white/60">
           ¿Ya tenés cuenta?{" "}
-          <span onClick={() => navigate("/login")} 
+          <span 
+            onClick={() => navigate("/login")} 
             className="text-[#ffd85a] cursor-pointer">
             Iniciar sesión
           </span>

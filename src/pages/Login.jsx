@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import axios from "axios";
+import api from "../utils/api"; // ✔ AHORA CORRECTO
 
 import logo_Yoquet from "../assets/logo_Yoquet.png";
 import login from "../assets/login.jpg";
@@ -16,26 +16,26 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  const backendURL = (
-    import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
-  ).replace(/\/$/, "");
-
   /* =========================================================
      VALIDACIÓN MÍNIMA DE INPUTS (anti-XSS básico)
   ========================================================= */
   const cleanText = (txt) => txt.replace(/[<>{}]/g, "");
 
+  /* =========================================================
+     LOGIN — ENVÍA TOKEN A API GLOBAL (FIX CRÍTICO)
+  ========================================================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await api.post(`${backendURL}/api/auth/login/`, {
+      const res = await api.post("/api/auth/login/", {
         username: cleanText(username),
         password,
       });
 
+      // Guardar tokens correctamente
       localStorage.setItem("access_token", res.data.access);
       localStorage.setItem("refresh_token", res.data.refresh);
 
@@ -44,13 +44,13 @@ export default function Login() {
       setTimeout(() => navigate("/productos"), 900);
     } catch {
       setError("Usuario o contraseña incorrectos");
-      showToast("Credenciales incorrectas", "error");
+      showToast("Credenciales incorrectos", "error");
       setLoading(false);
     }
   };
 
   /* =========================================================
-     UI — optimizada sin partículas ni efectos pesados
+     UI —  DISEÑO ORIGINAL COMPLETO
   ========================================================= */
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#1e1e22] text-white">
@@ -87,7 +87,9 @@ export default function Login() {
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(cleanText(e.target.value))}
+                onChange={(e) =>
+                  setUsername(cleanText(e.target.value))
+                }
                 className="w-full px-3 py-2 bg-[#2a2a2e] border border-white/20 rounded-md text-white"
                 placeholder="usuario@ejemplo.com"
                 required
@@ -147,7 +149,7 @@ export default function Login() {
 
           {/* FOOTER */}
           <div className="text-center text-white/50 text-xs mt-16">
-            © {new Date().getFullYear()} Yoquet Diseños  
+            © {new Date().getFullYear()} Yoquet Diseños
             <br />
             <span className="text-white/40 text-[10px]">
               Desarrollado por conurbaDEV
@@ -157,7 +159,7 @@ export default function Login() {
         </motion.div>
       </div>
 
-      {/* IMAGEN (optimizada con blur en mobile) */}
+      {/* IMAGEN */}
       <div className="hidden md:flex w-1/2 relative">
         <img
           src={login}
@@ -168,4 +170,3 @@ export default function Login() {
     </div>
   );
 }
-
