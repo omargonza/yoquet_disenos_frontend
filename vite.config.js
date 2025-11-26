@@ -10,40 +10,82 @@ export default defineConfig({
   plugins: [
     react(),
 
-    // ⭐ PWA súper liviana
+    // ⭐ PWA PRO con Workbox
     VitePWA({
       registerType: "autoUpdate",
 
+      // Archivos que deben incluirse siempre
       includeAssets: [
-        "icon_192.png",
-        "icon_512.png",
-        "logo_Yoquet.png"
+        "/icons/icon-192x192.png",
+        "/icons/icon-512x512.png",
+        "/apple-splash/splash-640x1136.png"
       ],
 
       manifest: {
-        name: "Yoquet Diseños",
+        id: "/",
+        name: "Yoquet Diseños — Tienda & Gestión",
         short_name: "Yoquet",
+        description: "Catálogo, tienda, carrito y gestión completa — versión optimizada para móviles.",
         start_url: "/",
+        scope: "/",
         display: "standalone",
-        background_color: "#ffffff",
-        theme_color: "#ffffff",
+        display_override: ["standalone", "browser"],
+        orientation: "portrait",
+        background_color: "#fffaf6",
+        theme_color: "#ff66b3",
+        dir: "ltr",
+        lang: "es-AR",
+        prefer_related_applications: false,
+        related_applications: [],
+
         icons: [
-          {
-            src: "icon_192.png",
-            sizes: "192x192",
-            type: "image/png"
-          },
-          {
-            src: "icon_512.png",
-            sizes: "512x512",
-            type: "image/png"
-          }
+          { src: "/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
+          { src: "/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+          { src: "/icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+          { src: "/icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
+          { src: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+          { src: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
+          { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" }
         ]
-      }
-    })
+      },
+
+      workbox: {
+        navigateFallback: "/index.html",
+
+        runtimeCaching: [
+          // ⛔ No cachear la API
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+            handler: "NetworkOnly",
+          },
+
+          // 📦 Cache de imágenes
+          {
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "images-cache",
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+
+          // 🎨 Cache de estilos y fuentes
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "style" ||
+              request.destination === "font",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "assets-cache",
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
+      },
+    }),
   ],
 
-  // Render usa rutas relativas
   base: isProd ? "./" : "/",
 
   server: {
