@@ -1,14 +1,9 @@
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open("v1").then((cache) =>
-      cache.addAll([
-        "/",
-        "/index.html",
-        "/manifest.json",
-        "/icon_192.png",
-        "/icon_512.png",
-        "/splash.png",
-      ])
+    cache.addAll([
+  "/index.html"  // Quitamos el resto temporalmente
+])
     )
   );
   console.log("SW instalado ✔");
