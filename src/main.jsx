@@ -8,23 +8,18 @@ import { CarritoProvider } from "./context/CarritoContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AuthProvider } from "./context/AuthContext";
 
-import { registerServiceWorker } from "./registerSW";
-
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <BrowserRouter basename="/">
-    <AuthProvider>               {/* PRIMERO: estado global de login */}
-      <AdminAuthProvider>        {/* administración */}
-        <CarritoProvider>        {/* carrito */}
-          <ToastProvider>        {/* avisos */}
-            <App />              {/* app final */}
+    <AuthProvider>
+      <AdminAuthProvider>
+        <CarritoProvider>
+          <ToastProvider>
+            <App />
           </ToastProvider>
         </CarritoProvider>
       </AdminAuthProvider>
     </AuthProvider>
   </BrowserRouter>
 );
-
-// 💡 Registramos el SW al final
-registerServiceWorker();

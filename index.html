@@ -3,29 +3,62 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
-    <link rel="manifest" href="/manifest.json">
 
-  <!-- icono para iPhone -->
-  <link rel="apple-touch-icon" href="./public/icon-192.png">
+  <!-- Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Yoquet Diseños">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
-
-  <meta name="theme-color" content="#ffd85a">
-
+  <!-- Splash screens iOS -->
+  <link href="/apple-splash/splash-640x1136.png" rel="apple-touch-startup-image"
+    media="(device-width: 320px) and (device-height: 568px)">
+  <link href="/apple-splash/splash-750x1334.png" rel="apple-touch-startup-image"
+    media="(device-width: 375px) and (device-height: 667px)">
+  <link href="/apple-splash/splash-828x1792.png" rel="apple-touch-startup-image"
+    media="(device-width: 414px) and (device-height: 896px)">
+  <link href="/apple-splash/splash-1125x2436.png" rel="apple-touch-startup-image"
+    media="(device-width: 375px) and (device-height: 812px)">
+  <link href="/apple-splash/splash-1242x2688.png" rel="apple-touch-startup-image"
+    media="(device-width: 414px) and (device-height: 896px)">
+  <link href="/apple-splash/splash-1536x2048.png" rel="apple-touch-startup-image"
+    media="(min-device-width: 768px) and (max-device-width: 1024px)">
+  <link href="/apple-splash/splash-1668x2224.png" rel="apple-touch-startup-image"
+    media="(min-device-width: 834px) and (max-device-width: 1112px)">
+  <link href="/apple-splash/splash-1668x2388.png" rel="apple-touch-startup-image"
+    media="(min-device-width: 834px) and (max-device-width: 1194px)">
+  <link href="/apple-splash/splash-2048x2732.png" rel="apple-touch-startup-image"
+    media="(device-width: 1024px) and (device-height: 1366px)">
 
   <title>Yoquet Diseños</title>
 </head>
 
 <body>
   <div id="root"></div>
+
+  <!-- Entry point -->
   <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Registro del Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(console.error);
+      });
+    }
+  </script>
+
 </body>
 
 </html>
