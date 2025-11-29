@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../utils/api"; // ✔ AHORA CORRECTO
 import { useAuth } from "../context/AuthContext";
-import logo_Yoquet from "../assets_opt/optimized/logo_yoquet.webp";
+import logo_Yoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 
 import loginImg from "../assets_opt/optimized/login.webp";
 
