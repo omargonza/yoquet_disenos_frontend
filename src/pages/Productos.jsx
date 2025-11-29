@@ -57,8 +57,8 @@ export default function Productos() {
     // 2) Intento de actualización desde backend
     try {
       const [prodRes, catRes] = await Promise.all([
-        api.get("/api/productos/", { timeout: 8000 }),
-        api.get("/api/categorias/", { timeout: 8000 })
+        api.get("/api/productos/", { timeout:25000  }),
+        api.get("/api/categorias/", { timeout: 25000 })
       ]);
 
       if (!mounted) return;
