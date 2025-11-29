@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
+
 import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
 
@@ -43,7 +44,7 @@ export default function Productos() {
   let mounted = true;
 
   async function load() {
-    // 1) cache inmediato para que la UI cargue en milisegundos
+    // 1) Carga instantánea desde cache
     const cachedProd = localStorage.getItem("cache_prod");
     const cachedCat = localStorage.getItem("cache_cat");
 
@@ -53,11 +54,11 @@ export default function Productos() {
       setLoading(false);
     }
 
-    // 2) intento de actualización usando el backend (si hay internet)
+    // 2) Intento de actualización desde backend
     try {
       const [prodRes, catRes] = await Promise.all([
-        api.get("/api/productos/"),
-        api.get("/api/categorias/")
+        api.get("/api/productos/", { timeout: 8000 }),
+        api.get("/api/categorias/", { timeout: 8000 })
       ]);
 
       if (!mounted) return;
@@ -68,11 +69,17 @@ export default function Productos() {
       setProductos(prod);
       setCategorias(cat);
 
-      // cache persistente
       localStorage.setItem("cache_prod", JSON.stringify(prod));
       localStorage.setItem("cache_cat", JSON.stringify(cat));
+
     } catch (e) {
-      console.warn("Sin Internet, usando cache.");
+      console.warn("Error consultando backend:", e.message);
+
+      if (!navigator.onLine) {
+        console.warn("Modo OFFLINE detectado → usando cache.");
+      } else {
+        console.warn("API FALLÓ pero hay internet → usando cache.");
+      }
     } finally {
       if (mounted) setLoading(false);
     }
@@ -81,6 +88,7 @@ export default function Productos() {
   load();
   return () => (mounted = false);
 }, []);
+
 
 
   /* ============================================================

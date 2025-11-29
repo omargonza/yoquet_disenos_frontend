@@ -10,7 +10,8 @@ import { CarritoProvider } from "./context/CarritoContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AuthProvider } from "./context/AuthContext";
 
-import { registerServiceWorker } from "./registerSW";
+import { registerSW } from "virtual:pwa-register";
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -30,5 +31,9 @@ root.render(
   </BrowserRouter>
 );
 
-registerServiceWorker();
+registerSW({
+  immediate: true,
+});
+
+
 
