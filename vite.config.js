@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-// Detecta modo actual
 const mode = process.env.NODE_ENV || "development";
 const isProd = mode === "production";
 
@@ -10,16 +9,11 @@ export default defineConfig({
   plugins: [
     react(),
 
-    // ⭐ PWA PRO con Workbox
     VitePWA({
       registerType: "autoUpdate",
+      devOptions: { enabled: true },
 
-      // Archivos que deben incluirse siempre
-      includeAssets: [
-        "/icons/icon-192x192.png",
-        "/icons/icon-512x512.png",
-        "/apple-splash/splash-640x1136.png"
-      ],
+      includeAssets: ["logo_Yoquet.png"],
 
       manifest: {
         id: "/",
@@ -36,7 +30,6 @@ export default defineConfig({
         dir: "ltr",
         lang: "es-AR",
         prefer_related_applications: false,
-        related_applications: [],
 
         icons: [
           { src: "/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
@@ -54,36 +47,54 @@ export default defineConfig({
         navigateFallback: "/index.html",
 
         runtimeCaching: [
-          // ⛔ No cachear la API
+          // 📌 API — NetworkFirst
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
-            handler: "NetworkOnly",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "yoquet-api",
+              networkTimeoutSeconds: 4,
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 }
+            }
           },
 
-          // 📦 Cache de imágenes
+          // 📌 Imágenes — CacheFirst
           {
             urlPattern: ({ request }) => request.destination === "image",
-            handler: "StaleWhileRevalidate",
+            handler: "CacheFirst",
             options: {
-              cacheName: "images-cache",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
+              cacheName: "yoquet-images",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              }
+            }
           },
 
-          // 🎨 Cache de estilos y fuentes
+          // 📌 Páginas — NetworkFirst
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "yoquet-pages",
+              networkTimeoutSeconds: 3,
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
+
+          // 📌 JS/CSS — StaleWhileRevalidate
           {
             urlPattern: ({ request }) =>
-              request.destination === "style" ||
-              request.destination === "font",
+              ["script", "style"].includes(request.destination),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "assets-cache",
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-        ],
-      },
-    }),
+              cacheName: "yoquet-static-assets"
+            }
+          }
+        ]
+      }
+    })
   ],
 
   base: isProd ? "./" : "/",
@@ -94,12 +105,12 @@ export default defineConfig({
       "/api": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
-        secure: false,
-      },
-    },
+        secure: false
+      }
+    }
   },
 
   build: {
-    sourcemap: true,
-  },
+    sourcemap: true
+  }
 });

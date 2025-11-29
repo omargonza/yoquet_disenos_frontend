@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import logo_Yoquet from "../assets/logo_Yoquet.png";
+import logo_Yoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 
 export default function Home() {
   const navigate = useNavigate();

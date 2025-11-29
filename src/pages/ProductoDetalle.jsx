@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import api from "../utils/api"; 
+import api from "../utils/api";
 import { useCarrito } from "../context/CarritoContext";
 
-// ============================================================
-// Sanitización mínima y suficiente
-// ============================================================
+/* ============================================================
+   Sanitización segura
+============================================================ */
 const sanitizeText = (str) =>
   typeof str === "string"
     ? str.replace(/</g, "&lt;").replace(/>/g, "&gt;").slice(0, 500)
@@ -18,49 +17,58 @@ const sanitizeImg = (url) => {
   return url.replace(/["'<>]/g, "");
 };
 
+/* ============================================================
+   COMPONENTE PRINCIPAL
+============================================================ */
 export default function ProductoDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { agregarAlCarrito } = useCarrito();
 
   const [producto, setProducto] = useState(null);
+  const [offline, setOffline] = useState(!navigator.onLine);
   const [error, setError] = useState("");
   const [agregado, setAgregado] = useState(false);
 
-  // ============================================================
-  // Cargar producto
-  // ============================================================
-  useEffect(() => {
-    let isMounted = true;
+useEffect(() => {
+  let mounted = true;
 
-    api
-      .get(`/api/productos/${id}/`)
-      .then((res) => {
-        if (isMounted) setProducto(res.data);
-      })
-      .catch(() => {
-        if (isMounted) setError("No se pudo cargar el producto");
-      });
+  const cacheKey = `prod_${id}`;
 
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  // 1) mostrar cache si existe
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) setProducto(JSON.parse(cached));
 
-  // ============================================================
-  // Agregar al carrito
-  // ============================================================
+  // 2) intentar fetch online
+  api.get(`/api/productos/${id}/`)
+    .then((res) => {
+      if (!mounted) return;
+
+      setProducto(res.data);
+      localStorage.setItem(cacheKey, JSON.stringify(res.data));
+    })
+    .catch(() => {
+      if (!cached) setError("Sin conexión. Producto no disponible.");
+    });
+
+  return () => (mounted = false);
+}, [id]);
+
+
+  /* ============================================================
+     Agregar al carrito
+  ============================================================ */
   const handleAdd = useCallback(() => {
     if (!producto) return;
 
     agregarAlCarrito(producto);
     setAgregado(true);
-    setTimeout(() => setAgregado(false), 1500);
+    setTimeout(() => setAgregado(false), 1200);
   }, [producto]);
 
-  // ============================================================
-  // Loading
-  // ============================================================
+  /* ============================================================
+     Loading / Errores
+  ============================================================ */
   if (error)
     return (
       <p className="text-center text-red-600 mt-10 font-semibold">{error}</p>
@@ -75,36 +83,31 @@ export default function ProductoDetalle() {
 
   const imgSrc = sanitizeImg(producto.imagen);
 
-  // ============================================================
-  // UI FINAL
-  // ============================================================
+  /* ============================================================
+     UI FINAL — ultra liviana
+  ============================================================ */
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.45 }}
-      className="min-h-screen bg-[#2f3035] text-white px-6 py-14 flex items-center justify-center"
-    >
+    <div className="min-h-screen bg-[#2f3035] text-white px-6 py-14 flex items-center justify-center">
       <style>{`
         .card {
           background: #ffffff10;
           border: 1px solid #ffffff22;
-          border-radius: 22px;
-          padding: 2rem;
-          max-width: 960px;
+          border-radius: 18px;
+          padding: 1.5rem;
+          max-width: 860px;
           width: 100%;
-          box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+          box-shadow: 0 8px 26px rgba(0,0,0,0.25);
         }
         .btn-main {
           background: linear-gradient(90deg,#ff66b3,#ffd85a);
-          padding: 0.9rem 1.5rem;
+          padding: 0.8rem 1.5rem;
           border-radius: 9999px;
           color:#111;
           font-weight: 600;
           text-align:center;
         }
         .btn-main:disabled {
-          background:#aaaaaa55;
+          background:#bbbbbb44;
           color:#333;
         }
         .price {
@@ -118,19 +121,22 @@ export default function ProductoDetalle() {
       <div className="card flex flex-col md:flex-row gap-10 items-center">
         {/* Imagen */}
         <div className="w-full md:w-1/2 flex justify-center">
-          <motion.img
+          <img
             src={imgSrc}
             alt={sanitizeText(producto.nombre)}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.45 }}
-            className="rounded-2xl w-full max-w-md object-cover border border-[#ffffff22]"
+            className="rounded-xl w-full max-w-md object-cover border border-[#ffffff22]"
             onError={(e) => (e.currentTarget.src = "/fallback.webp")}
           />
         </div>
 
         {/* Info */}
         <div className="flex-1 flex flex-col text-left">
+          {offline && (
+            <div className="text-yellow-400 text-sm mb-2 font-semibold">
+              Modo offline — datos desde caché
+            </div>
+          )}
+
           <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] bg-clip-text text-transparent">
             {sanitizeText(producto.nombre)}
           </h1>
@@ -145,12 +151,8 @@ export default function ProductoDetalle() {
 
           <p className="text-3xl mb-6 price">${producto.precio}</p>
 
-          <button
-            onClick={handleAdd}
-            disabled={agregado}
-            className="btn-main w-full"
-          >
-            {agregado ? "Agregado ✔️" : "Agregar al carrito 🛒"}
+          <button onClick={handleAdd} disabled={agregado} className="btn-main w-full">
+            {agregado ? "Agregado ✔" : "Agregar al carrito 🛒"}
           </button>
 
           <button
@@ -161,6 +163,6 @@ export default function ProductoDetalle() {
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

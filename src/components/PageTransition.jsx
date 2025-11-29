@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import logo_Yoquet from "../assets/logo_Yoquet.png";
+import logo_Yoquet from "../assets_opt/logo_Yoquet.png";
 
 export default function PageTransition({ children }) {
   const location = useLocation();

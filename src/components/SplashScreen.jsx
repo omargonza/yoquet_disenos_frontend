@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import logo_Yoquet from "../assets/logo_Yoquet.png";
+import logo_Yoquet from "../assets_opt/logo_Yoquet.png";
 
 export default function SplashScreen({ onFinish }) {
   // Duración total muy corta
