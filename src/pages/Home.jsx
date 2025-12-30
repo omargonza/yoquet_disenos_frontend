@@ -1,195 +1,197 @@
-import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo_Yoquet from "../assets_opt/optimized/logo_Yoquet.webp";
+import api from "../utils/api";
+import logoYoquet from "../assets_opt/optimized/logo_Yoquet.webp";
+
+function safeText(v) {
+  return String(v || "").replace(/</g, "").replace(/>/g, "").slice(0, 80);
+}
+
+function imgUrl(url) {
+  if (!url || typeof url !== "string") return logoYoquet;
+  const clean = url.replace(/["'<>]/g, "");
+  // acepta absoluto o relativo
+  if (clean.startsWith("http://") || clean.startsWith("https://") || clean.startsWith("/")) return clean;
+  return logoYoquet;
+}
 
 export default function Home() {
   const navigate = useNavigate();
   const [destacados, setDestacados] = useState([]);
-  const scrollRef = useRef(null);
+  const [loading, setLoading] = useState(true);
 
-  const backendURL =
-    (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(
-      /\/$/,
-      ""
-    );
+  const titulo = useMemo(() => "Cotillón artesanal, lindo y listo para celebrar", []);
+  const subtitulo = useMemo(
+    () => "Diseños premium para cumpleaños, eventos y sorpresas. Comprá rápido, sin vueltas.",
+    []
+  );
 
-  /* =============================================================
-     1) Cargar Destacados (sin efectos)
-  ============================================================= */
   useEffect(() => {
-    const fetchDestacados = async () => {
+    let mounted = true;
+
+    async function load() {
       try {
-        const res = await fetch(`${backendURL}/api/productos/destacados/`);
-        const data = await res.json();
-        setDestacados(data.results || data);
-      } catch (err) {
-        console.error("Error cargando destacados:", err);
+        const res = await api.get("/api/productos/destacados/", { timeout: 20000 });
+        const data = res.data?.results || res.data || [];
+        if (mounted) setDestacados(Array.isArray(data) ? data.slice(0, 10) : []);
+      } catch {
+        // silencioso
+      } finally {
+        if (mounted) setLoading(false);
       }
-    };
-    fetchDestacados();
+    }
+
+    load();
+    return () => (mounted = false);
   }, []);
 
-  /* =============================================================
-     2) Carrusel auto-scroll ULTRA liviano
-  ============================================================= */
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    let frame;
-    const speed = 0.15;
-
-    const anim = () => {
-      el.scrollLeft += speed;
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
-      frame = requestAnimationFrame(anim);
-    };
-
-    frame = requestAnimationFrame(anim);
-    return () => cancelAnimationFrame(frame);
-  }, [destacados]);
-
-  /* =============================================================
-     UI PRINCIPAL — Versión ULTRA-LIVIANA
-  ============================================================= */
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.7 }}
-      className="min-h-screen flex flex-col items-center 
-                 text-center px-6 sm:px-8 pt-20 
-                 bg-[#1d1e22] text-white overflow-hidden"
-    >
-      {/* =========================================================
-          ESTILOS OPTIMIZADOS (sin gradientes complejos)
-      ========================================================= */}
-      <style>{`
-        :root {
-          --rosa: #ff66b3;
-          --dorado: #ffd85a;
-          --turquesa: #42e2b8;
-        }
+    <main className="min-h-[calc(100vh-72px)]">
+      {/* HERO */}
+      <section className="container-yoquet pt-10 sm:pt-14 pb-10">
+        <div
+          className="card-yoquet p-6 sm:p-10"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.94), rgba(255,255,255,0.84))",
+          }}
+        >
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1 text-center md:text-left">
+              <img
+                src={logoYoquet}
+                alt="Yoquet Diseños"
+                className="w-40 sm:w-44 mx-auto md:mx-0"
+                loading="eager"
+                decoding="async"
+              />
 
-        .btn-festivo {
-          padding: 0.8rem 2rem;
-          border-radius: 9999px;
-          font-weight: 600;
-          color: #111;
-          background: linear-gradient(90deg, var(--rosa), var(--dorado), var(--turquesa));
-          transition: 0.25s ease;
-        }
-
-        .btn-festivo:hover {
-          transform: scale(1.05);
-        }
-
-        .card {
-          background: #ffffff10;
-          border: 1px solid #ffffff22;
-          border-radius: 20px;
-          backdrop-filter: blur(6px);
-          transition: 0.35s ease;
-        }
-
-        .card:hover {
-          transform: translateY(-5px) scale(1.03);
-          border-color: #ffd85a55;
-        }
-      `}</style>
-
-      {/* =========================================================
-          HERO
-      ========================================================= */}
-      <motion.img
-        src={logo_Yoquet}
-        className="w-44 sm:w-52 drop-shadow-[0_5px_16px_rgba(255,216,90,0.6)] mb-6"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8 }}
-      />
-
-      <motion.h1
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="text-4xl sm:text-5xl font-bold bg-gradient-to-r 
-                   from-[var(--rosa)] via-[var(--dorado)] to-[var(--turquesa)]
-                   bg-clip-text text-transparent mb-3"
-      >
-        Yoquet Diseños
-      </motion.h1>
-
-      <p className="text-[#ffd85a] text-lg max-w-xl mx-auto mb-8">
-        🎉 Cotillón Premium — Color, Estilo y Brillo en Cada Detalle ✨
-      </p>
-
-      {/* =========================================================
-          BOTÓN CATÁLOGO
-      ========================================================= */}
-      <motion.button
-        whileTap={{ scale: 0.96 }}
-        onClick={() => navigate("/productos")}
-        className="btn-festivo mt-4"
-      >
-        Ir al Catálogo 🛍️
-      </motion.button>
-
-      {/* =========================================================
-          DESTACADOS
-      ========================================================= */}
-      {destacados.length > 0 && (
-        <div className="w-full max-w-5xl mt-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-[#ffd85a] mb-6">
-            Destacados 💎
-          </h2>
-
-          <div className="relative">
-            <div
-              ref={scrollRef}
-              className="flex gap-6 overflow-x-auto scrollbar-none pb-4"
-            >
-              {destacados.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(`/productos/${p.id}`)}
-                  className="card cursor-pointer min-w-[220px] mx-auto"
+              <h1 className="mt-5 text-4xl sm:text-5xl">
+                <span
+                  style={{
+                    background: "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                    WebkitBackgroundClip: "text",
+                    color: "transparent",
+                  }}
                 >
-                  <img
-                    src={p.imagen}
-                    alt={p.nombre}
-                    className="w-full h-56 object-cover rounded-t-2xl"
-                    onError={(e) => (e.currentTarget.src = logo_Yoquet)}
-                  />
-                  <div className="p-3 text-left">
-                    <h3 className="text-lg font-semibold truncate">
-                      {p.nombre}
-                    </h3>
-                    <p className="text-[#ff66b3] font-bold mt-1">
-                      ${p.precio}
-                    </p>
+                  Yoquet Diseños
+                </span>
+              </h1>
+
+              <p className="mt-3 text-base sm:text-lg" style={{ color: "var(--muted)", fontWeight: 600 }}>
+                {titulo}
+              </p>
+              <p className="mt-2 text-sm sm:text-base" style={{ color: "var(--muted)" }}>
+                {subtitulo}
+              </p>
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <button className="btn-yoquet" onClick={() => navigate("/productos")}>
+                  Ver catálogo
+                </button>
+                <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+                  Mirar destacados
+                </button>
+              </div>
+
+              {/* Confianza / micro-copy */}
+              <div className="mt-5 text-xs sm:text-sm" style={{ color: "var(--muted)" }}>
+                Envíos y coordinación por zona. Atención rápida. Catálogo grande, navegación liviana.
+              </div>
+            </div>
+
+            {/* “Confetti” decorativo (0 peso real: solo CSS) */}
+            <div className="w-full md:w-[360px]">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { t: "Cumpleaños", c: "rgba(255,102,179,0.14)" },
+                  { t: "Souvenirs", c: "rgba(255,216,90,0.16)" },
+                  { t: "Eventos", c: "rgba(66,226,184,0.16)" },
+                  { t: "Personalizados", c: "rgba(139,92,246,0.14)" },
+                ].map((x) => (
+                  <div
+                    key={x.t}
+                    className="p-4 rounded-2xl"
+                    style={{
+                      background: x.c,
+                      border: "1px solid rgba(61,43,31,0.10)",
+                    }}
+                  >
+                    <div className="text-sm font-extrabold" style={{ color: "var(--text)" }}>
+                      {x.t}
+                    </div>
+                    <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                      Ideas listas para festejar.
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* =========================================================
-          FOOTER
-      ========================================================= */}
-      <div className="mt-20 mb-10 text-white/70 text-xs">
-        © {new Date().getFullYear()} Yoquet Diseños — Estilo que celebra 🎉
-        <br />
-        <span className="text-[10px] text-white/50">
-          Desarrollado con ❤️ por <span className="text-[#ffd85a] font-bold">
-            conurbaDEV
-          </span>
-        </span>
-      </div>
-    </motion.div>
+      {/* DESTACADOS */}
+      <section className="container-yoquet pb-14">
+        <div className="flex items-end justify-between gap-3">
+          <h2 className="text-2xl sm:text-3xl">Destacados</h2>
+          <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+            Ver todo
+          </button>
+        </div>
+
+        <div className="mt-5">
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="card-yoquet p-3">
+                  <div className="skeleton h-28 w-full" />
+                  <div className="skeleton h-4 w-3/4 mt-3" />
+                  <div className="skeleton h-4 w-1/2 mt-2" />
+                </div>
+              ))}
+            </div>
+          ) : destacados.length > 0 ? (
+            <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2">
+              {destacados.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => navigate(`/productos/${p.id}`)}
+                  className="card-yoquet text-left min-w-[210px] max-w-[210px] p-3"
+                  style={{ transition: "transform .12s ease", cursor: "pointer" }}
+                  onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.99)")}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                >
+                  <img
+                    src={imgUrl(p.imagen)}
+                    alt={safeText(p.nombre)}
+                    className="w-full h-36 object-cover rounded-2xl"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => (e.currentTarget.src = logoYoquet)}
+                  />
+                  <div className="mt-3">
+                    <div className="font-extrabold text-sm truncate" style={{ color: "var(--text)" }}>
+                      {safeText(p.nombre)}
+                    </div>
+                    <div className="font-extrabold mt-1" style={{ color: "var(--color-rosa)" }}>
+                      ${p.precio}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="card-yoquet p-5" style={{ color: "var(--muted)" }}>
+              No hay destacados por el momento.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-10 text-center text-xs" style={{ color: "var(--muted)" }}>
+          © {new Date().getFullYear()} Yoquet Diseños — Estilo que celebra.
+        </div>
+      </section>
+    </main>
   );
 }
-

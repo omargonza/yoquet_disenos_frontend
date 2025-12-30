@@ -1,66 +1,99 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import logoYoquet from "../assets/logo_Yoquet.png"; // ✔️ Seguro y local
+import logoYoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 
 export default function Empaquetando() {
   const navigate = useNavigate();
 
-  // Redirección simple y segura
   useEffect(() => {
-    const timer = setTimeout(() => navigate("/despedida"), 2000);
+    const timer = setTimeout(() => navigate("/despedida", { replace: true }), 1400);
     return () => clearTimeout(timer);
   }, [navigate]);
 
+  const fecha = useMemo(() => new Date().toLocaleDateString(), []);
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.6 }}
-      className="flex flex-col items-center justify-center min-h-screen text-center bg-[#2f3034] text-white px-6"
-    >
-      {/* LOGO */}
-      <motion.img
-        src={logoYoquet}
-        alt="Yoquet Diseños"
-        className="w-28 sm:w-40 mb-8"
-        initial={{ opacity: 0.8, scale: 0.9 }}
-        animate={{ opacity: [0.8, 1, 0.8], scale: [0.9, 1, 0.9] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-10 pb-14">
+        <div className="card-yoquet p-7 sm:p-10 max-w-xl mx-auto text-center">
+          <style>{`
+            @keyframes yoquetBar {
+              0% { transform: translateX(-65%); }
+              100% { transform: translateX(0%); }
+            }
+            @keyframes yoquetPulse {
+              0%,100% { transform: scale(1); }
+              50% { transform: scale(1.03); }
+            }
+          `}</style>
 
-      {/* TITULO */}
-      <motion.h1
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.7 }}
-        className="text-3xl sm:text-4xl font-bold bg-gradient-to-r 
-                   from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
-                   bg-clip-text text-transparent mb-6"
-      >
-        Empaquetando tu pedido 🎀
-      </motion.h1>
+          <img
+            src={logoYoquet}
+            alt="Yoquet Diseños"
+            className="w-36 sm:w-44 mx-auto"
+            loading="eager"
+            decoding="async"
+            style={{ animation: "yoquetPulse 1.6s ease-in-out infinite" }}
+          />
 
-      {/* BARRA SIMPLE */}
-      <div className="w-56 h-2 bg-white/10 rounded-full overflow-hidden">
-        <motion.div
-          className="h-full bg-[#ffd85a]"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 1.6, ease: "easeInOut" }}
-        />
-      </div>
+          <h1 className="mt-6 text-3xl sm:text-4xl">
+            <span
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Empaquetando tu pedido
+            </span>
+          </h1>
 
-      {/* TEXTO */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.2, 1, 0.2] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="text-sm text-[#f0e4c3]/80 mt-6"
-      >
-        Cuidando cada detalle... 💛
-      </motion.p>
-    </motion.div>
+          <p className="mt-2 text-sm sm:text-base" style={{ color: "var(--muted)", fontWeight: 700 }}>
+            Cuidando cada detalle para que llegue perfecto. {fecha}
+          </p>
+
+          {/* Barra de progreso (CSS-only) */}
+          <div
+            className="mt-7 h-3 rounded-full overflow-hidden"
+            style={{
+              background: "rgba(61,43,31,0.10)",
+              border: "1px solid rgba(61,43,31,0.10)",
+            }}
+          >
+            <div
+              className="h-full w-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                animation: "yoquetBar 1.2s ease-in-out forwards",
+              }}
+            />
+          </div>
+
+          {/* “Confetti” sutil */}
+          <div
+            className="mt-6 p-4 rounded-3xl text-xs font-bold"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,102,179,0.10), rgba(255,216,90,0.10), rgba(66,226,184,0.10))",
+              border: "1px solid rgba(61,43,31,0.10)",
+              color: "var(--muted)",
+            }}
+          >
+            Preparando tu comprobante y el estado del pedido…
+          </div>
+
+          <div className="mt-6 flex justify-center gap-3 flex-wrap">
+            <button className="btn-yoquet" onClick={() => navigate("/despedida", { replace: true })}>
+              Continuar
+            </button>
+            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+              Volver al catálogo
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

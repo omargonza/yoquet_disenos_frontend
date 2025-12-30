@@ -1,66 +1,104 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import logoYoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 
 export default function Despedida() {
   const navigate = useNavigate();
+  const fecha = useMemo(() => new Date().toLocaleDateString(), []);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => navigate("/"), 1800);
-    return () => clearTimeout(timeout);
-  }, [navigate]);
+  const handleShare = async () => {
+    const text = "¡Compré en Yoquet Diseños! Cotillón artesanal hermoso.";
+    const url = window.location.origin;
+
+    // Web Share API (si existe). Si no, fallback a copiar.
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Yoquet Diseños", text, url });
+        return;
+      }
+    } catch {
+      // usuario canceló o no soportado: seguimos con fallback
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      // Si querés, podés disparar un toast acá (si lo usás en esta pantalla)
+      alert("Link copiado para compartir.");
+    } catch {
+      alert("No se pudo copiar el link.");
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center min-h-screen px-6 
-                 text-center bg-[#3b3d45] text-white"
-    >
-      {/* TARJETA PRINCIPAL */}
-      <motion.div
-        initial={{ scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white/85 text-[#3d2b1f] rounded-2xl shadow-xl
-                   border border-[#e7dcc5] w-full max-w-md p-8"
-      >
-        <h1
-          className="text-2xl font-bold mb-4
-                     bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
-                     bg-clip-text text-transparent"
-        >
-          ¡Gracias por tu visita! 💛
-        </h1>
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-10 pb-14">
+        <div className="card-yoquet p-7 sm:p-10 max-w-xl mx-auto text-center">
+          <img
+            src={logoYoquet}
+            alt="Yoquet Diseños"
+            className="w-40 sm:w-44 mx-auto"
+            loading="eager"
+            decoding="async"
+          />
 
-        <p className="text-sm text-[#5a4a3c] mb-6 leading-relaxed">
-          Cerraste sesión correctamente.<br />
-          Esperamos verte pronto ✨
-        </p>
+          <h1 className="mt-6 text-3xl sm:text-4xl">
+            <span
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              ¡Gracias por tu compra!
+            </span>
+          </h1>
 
-        {/* Ícono elegante y liviano */}
-        <div className="flex justify-center mt-4">
-          <motion.div
-            animate={{ scale: [1, 1.06, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity }}
-            className="w-20 h-20 rounded-xl flex items-center justify-center
-                       bg-gradient-to-br from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]"
+          <p className="mt-2 text-sm sm:text-base" style={{ color: "var(--muted)", fontWeight: 700 }}>
+            Pedido registrado el {fecha}. Si necesitás ayuda, escribinos y lo resolvemos rápido.
+          </p>
+
+          <div
+            className="mt-6 p-5 rounded-3xl text-left"
+            style={{
+              background: "rgba(255,255,255,0.65)",
+              border: "1px solid rgba(61,43,31,0.10)",
+              color: "var(--text)",
+            }}
           >
-            <span className="text-[#3b3d45] font-bold text-sm">👋</span>
-          </motion.div>
-        </div>
-      </motion.div>
+            <div className="text-sm font-extrabold">¿Qué sigue?</div>
+            <ul className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+              <li>• Estamos preparando tu pedido con el máximo cuidado.</li>
+              <li>• Te contactamos si falta algún dato de envío.</li>
+              <li>• Mientras tanto, podés seguir viendo el catálogo.</li>
+            </ul>
+          </div>
 
-      {/* Texto de transición sutil */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="mt-8 text-sm text-[#f0e4c3]/80"
-      >
-        Volviendo al inicio…
-      </motion.p>
-    </motion.div>
+          <div
+            className="mt-6 p-4 rounded-3xl text-xs font-bold"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,102,179,0.10), rgba(255,216,90,0.10), rgba(66,226,184,0.10))",
+              border: "1px solid rgba(61,43,31,0.10)",
+              color: "var(--muted)",
+            }}
+          >
+            Tip: si te gustó, compartí el link y ayudás a que Yoquet llegue a más personas.
+          </div>
+
+          <div className="mt-6 flex justify-center gap-3 flex-wrap">
+            <button className="btn-yoquet" onClick={() => navigate("/productos")}>
+              Seguir comprando
+            </button>
+            <button className="btn-yoquet-ghost" onClick={() => navigate("/carrito")}>
+              Ver carrito
+            </button>
+            <button className="btn-yoquet-ghost" onClick={handleShare}>
+              Compartir
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

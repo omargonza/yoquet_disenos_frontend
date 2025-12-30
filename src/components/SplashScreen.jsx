@@ -1,45 +1,41 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
 import logo_Yoquet from "../assets_opt/logo_Yoquet.png";
 
-export default function SplashScreen({ onFinish }) {
-  // Duración total muy corta
-  useEffect(() => {
-    const timer = setTimeout(() => onFinish?.(), 1100);
-    return () => clearTimeout(timer);
-  }, [onFinish]);
-
+export default function SplashScreen() {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.35 }}
-      className="fixed inset-0 flex flex-col items-center justify-center
-                 bg-[#2b2d33] text-white font-[Poppins] z-[9999]"
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      style={{
+        background:
+          "radial-gradient(circle at 18% 18%, rgba(255,102,179,0.12) 0%, transparent 55%)," +
+          "radial-gradient(circle at 82% 22%, rgba(255,216,90,0.12) 0%, transparent 55%)," +
+          "radial-gradient(circle at 55% 90%, rgba(66,226,184,0.12) 0%, transparent 60%)," +
+          "var(--color-crema)",
+      }}
     >
-
-      {/* LOGO */}
-      <motion.img
-        src={logo_Yoquet}
-        alt="Yoquet Diseños"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.45 }}
-        className="w-36 sm:w-44 mb-3"
-      />
-
-      {/* TÍTULO */}
-      <motion.h1
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.35 }}
-        className="text-lg sm:text-xl font-semibold bg-gradient-to-r
-                   from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]
-                   text-transparent bg-clip-text tracking-wide"
-      >
-        Yoquet Diseños
-      </motion.h1>
+      <div className="flex flex-col items-center">
+        <motion.img
+          src={logo_Yoquet}
+          alt="Yoquet Diseños"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.22 }}
+          className="w-40 sm:w-44"
+        />
+        <div
+          className="mt-3 text-sm font-extrabold"
+          style={{
+            background: "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          Preparando el cotillón…
+        </div>
+      </div>
     </motion.div>
   );
 }

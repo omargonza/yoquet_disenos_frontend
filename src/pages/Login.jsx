@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useToast } from "../context/ToastContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import api from "../utils/api"; // ✔ AHORA CORRECTO
+import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
-import logo_Yoquet from "../assets_opt/optimized/logo_Yoquet.webp";
-
+import logoYoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 import loginImg from "../assets_opt/optimized/login.webp";
 
+const cleanText = (txt) => String(txt || "").replace(/[<>{}]/g, "").slice(0, 120);
 
 export default function Login() {
   const { showToast } = useToast();
@@ -21,16 +20,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/productos";
-   
 
-  /* =========================================================
-     VALIDACIÓN MÍNIMA DE INPUTS (anti-XSS básico)
-  ========================================================= */
-  const cleanText = (txt) => txt.replace(/[<>{}]/g, "");
-
-  /* =========================================================
-     LOGIN — ENVÍA TOKEN A API GLOBAL (FIX CRÍTICO)
-  ========================================================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -42,141 +32,169 @@ export default function Login() {
         password,
       });
 
-      // Guardar tokens correctamente
-      // localStorage.setItem("access_token", res.data.access);
-      //localStorage.setItem("refresh_token", res.data.refresh);
-     
-    login(res.data.access, res.data.refresh);
+      login(res.data.access, res.data.refresh);
 
-      showToast(`Bienvenido, ${cleanText(username)} ✨`, "success");
-
-       // Redirección inteligente:
-      setTimeout(() => navigate(from, { replace: true }), 900);
+      showToast(`Bienvenido, ${cleanText(username)}`, "success");
+      navigate(from, { replace: true });
     } catch {
       setError("Usuario o contraseña incorrectos");
-      showToast("Credenciales incorrectos", "error");
+      showToast("Credenciales incorrectas", "error");
       setLoading(false);
     }
   };
 
-  /* =========================================================
-     UI —  DISEÑO ORIGINAL COMPLETO
-  ========================================================= */
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#1e1e22] text-white">
-
-      {/* FORM */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center px-10 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-sm mx-auto w-full"
-        >
-
-          {/* LOGO */}
-          <img
-            src={logo_Yoquet}
-            alt="Logo Yoquet Diseños"
-            className="w-44 mx-auto mb-6 drop-shadow-xl"
-          />
-
-          <h2 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-[#ffd85a] to-[#ff66b3] bg-clip-text text-transparent">
-            ¡Bienvenido!
-          </h2>
-          <p className="text-center text-white/70 mb-6">
-            Iniciá sesión para continuar ✨
-          </p>
-
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-10 pb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-
-            {/* USER */}
-            <div>
-              <label className="block text-sm mb-1">Usuario</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) =>
-                  setUsername(cleanText(e.target.value))
-                }
-                className="w-full px-3 py-2 bg-[#2a2a2e] border border-white/20 rounded-md text-white"
-                placeholder="usuario@ejemplo.com"
-                required
+          <div className="card-yoquet p-6 sm:p-8">
+            <div className="flex items-center justify-center">
+              <img
+                src={logoYoquet}
+                alt="Yoquet Diseños"
+                className="w-40 sm:w-44"
+                loading="eager"
+                decoding="async"
               />
             </div>
 
-            {/* PASS */}
-            <div>
-              <label className="block text-sm mb-1">Contraseña</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-[#2a2a2e] border border-white/20 rounded-md text-white"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {/* BUTTON */}
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 rounded-full bg-gradient-to-r from-[#ff66b3] to-[#ffd85a] text-black font-semibold shadow-md"
-            >
-              {loading ? "Ingresando..." : "Iniciar Sesión"}
-            </motion.button>
-
-            <p className="text-center text-white/70 text-sm mt-3">
-              ¿No tenés cuenta?
+            <h2 className="mt-6 text-3xl sm:text-4xl text-center">
               <span
-                onClick={() => navigate("/register")}
-                className="text-[#42e2b8] cursor-pointer ml-1 hover:text-[#ffd85a]"
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                }}
               >
-                Registrarme
+                ¡Bienvenido!
               </span>
+            </h2>
+            <p className="mt-2 text-center text-sm" style={{ color: "var(--muted)", fontWeight: 700 }}>
+              Iniciá sesión para comprar rápido y sin fricción.
             </p>
 
-            <p className="text-center text-white/70 text-sm">
-              ¿Olvidaste tu contraseña?
-              <span
-                onClick={() => navigate("/forgot-password")}
-                className="text-[#ff66b3] cursor-pointer ml-1 hover:text-[#ffd85a]"
+            <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+              <div>
+                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
+                  Usuario
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(cleanText(e.target.value))}
+                  placeholder="usuario@ejemplo.com"
+                  autoComplete="username"
+                  required
+                  className="w-full px-4 py-3 rounded-2xl outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.82)",
+                    border: "1px solid rgba(61,43,31,0.12)",
+                    color: "var(--text)",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  className="w-full px-4 py-3 rounded-2xl outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.82)",
+                    border: "1px solid rgba(61,43,31,0.12)",
+                    color: "var(--text)",
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-yoquet w-full"
+                style={{
+                  opacity: loading ? 0.75 : 1,
+                  pointerEvents: loading ? "none" : "auto",
+                }}
               >
-                Recuperarla 🔐
-              </span>
-            </p>
-          </form>
+                {loading ? "Ingresando…" : "Iniciar sesión"}
+              </button>
 
-          {/* ERROR */}
-          {error && (
-            <div className="mt-4 bg-red-500/80 text-white text-center p-2 rounded-md text-sm">
-              {error}
+              {error && (
+                <div
+                  className="mt-2 p-3 rounded-2xl text-sm font-bold text-center"
+                  style={{
+                    background: "rgba(255, 59, 48, 0.10)",
+                    border: "1px solid rgba(255, 59, 48, 0.18)",
+                    color: "#b42318",
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              <div className="pt-2 text-center text-sm" style={{ color: "var(--muted)" }}>
+                ¿No tenés cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="font-extrabold"
+                  style={{ color: "var(--color-turquesa)" }}
+                >
+                  Registrarme
+                </button>
+              </div>
+
+              <div className="text-center text-sm" style={{ color: "var(--muted)" }}>
+                ¿Olvidaste tu contraseña?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="font-extrabold"
+                  style={{ color: "var(--color-rosa)" }}
+                >
+                  Recuperarla
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-10 text-center text-xs" style={{ color: "var(--muted)" }}>
+              © {new Date().getFullYear()} Yoquet Diseños
+              <div className="text-[10px]" style={{ opacity: 0.8 }}>
+                Desarrollado por conurbaDEV
+              </div>
             </div>
-          )}
-
-          {/* FOOTER */}
-          <div className="text-center text-white/50 text-xs mt-16">
-            © {new Date().getFullYear()} Yoquet Diseños
-            <br />
-            <span className="text-white/40 text-[10px]">
-              Desarrollado por conurbaDEV
-            </span>
           </div>
 
-        </motion.div>
-      </div>
-
-      {/* IMAGEN */}
-      <div className="hidden md:flex w-1/2 relative">
-        <img
-          src={loginImg}
-          alt="decorativo"
-          className="w-full h-full object-cover opacity-70"
-        />
-      </div>
-    </div>
+          {/* PANEL VISUAL (liviano, claro, divertido) */}
+          <div className="hidden lg:block">
+            <div
+              className="card-yoquet overflow-hidden h-full"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,102,179,0.10), rgba(255,216,90,0.10), rgba(66,226,184,0.10))",
+              }}
+            >
+              <img
+                src={loginImg}
+                alt="Decorativo Yoquet"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                style={{ opacity: 0.82 }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

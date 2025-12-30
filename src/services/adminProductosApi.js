@@ -1,8 +1,16 @@
-import api from "../../src/utils/api";
+import api from "../utils/api";
+
+// Ajustable sin tocar llamadas
+const DEFAULT_PAGE_SIZE = 24;
 
 // === LISTADO PAGINADO ===
-export async function obtenerProductos(page = 1) {
-  const res = await api.get(`/api/productos/?page=${page}`);
+export async function obtenerProductos(page = 1, { pageSize = DEFAULT_PAGE_SIZE, search = "" } = {}) {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  if (pageSize) params.set("page_size", String(pageSize));
+  if (search) params.set("search", search);
+
+  const res = await api.get(`/api/productos/?${params.toString()}`);
   return res.data;
 }
 

@@ -1,38 +1,36 @@
 import { motion } from "framer-motion";
 
-/**
- * FlyingImage Ultra-Light
- * Animación optimizada al máximo para móviles.
- */
 export default function FlyingImage({ imageSrc, startRect, endRect }) {
-  const x = endRect.x - startRect.x;
-  const y = endRect.y - startRect.y;
+  const dx = endRect.x - startRect.x;
+  const dy = endRect.y - startRect.y;
 
   return (
     <motion.img
       src={imageSrc}
       initial={{
-        x: startRect.x,
-        y: startRect.y,
+        x: 0,
+        y: 0,
         width: startRect.width,
         height: startRect.height,
         opacity: 1,
         scale: 1,
       }}
       animate={{
-        x,
-        y,
+        x: dx,
+        y: dy,
         width: 40,
         height: 40,
         opacity: 0,
         scale: 0.5,
       }}
       transition={{
-        duration: 0.65,
+        duration: 0.6,
         ease: "easeOut",
       }}
       className="fixed pointer-events-none z-[9999] rounded-lg"
       style={{
+        left: startRect.x,
+        top: startRect.y,
         willChange: "transform, opacity",
       }}
     />

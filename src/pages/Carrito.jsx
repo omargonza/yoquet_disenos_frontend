@@ -1,19 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
 
-/* ======================================================
-   Sanitización básica segura
-====================================================== */
 const sanitizeText = (str) =>
-  String(str || "")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .slice(0, 200);
+  String(str || "").replace(/</g, "&lt;").replace(/>/g, "&gt;").slice(0, 200);
 
 const sanitizeImg = (url) => {
   if (!url) return "/fallback.webp";
   if (!String(url).startsWith("http")) return "/fallback.webp";
-  return url.replace(/["'<>]/g, "");
+  return String(url).replace(/["'<>]/g, "");
 };
 
 export default function Carrito() {
@@ -26,179 +20,168 @@ export default function Carrito() {
     totalItems,
     totalPrecio,
   } = useCarrito();
-  
+
   const online = navigator.onLine;
-
-
   const navigate = useNavigate();
 
-  /* ======================================================
-     Si está vacío
-====================================================== */
   if (carrito.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2f3035] text-white px-6 text-center">
-        <h2 className="text-4xl font-extrabold bg-gradient-to-r from-[#ffd85a] via-[#ff66b3] to-[#42e2b8] bg-clip-text text-transparent mb-4">
-          Tu carrito está vacío 🛍️
-        </h2>
+      <main className="min-h-[calc(100vh-72px)]">
+        <section className="container-yoquet pt-10 pb-14">
+          <div className="card-yoquet p-8 text-center max-w-xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
+              Tu carrito está vacío
+            </h1>
+            <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
+              Sumá productos y volvé acá para finalizar la compra.
+            </p>
 
-        <p className="text-white/70 mb-6 max-w-sm">
-          Descubrí cientos de productos premium ✨
-        </p>
-
-        <button
-          onClick={() => navigate("/productos")}
-          className="px-8 py-3 bg-gradient-to-r from-[#ff66b3] to-[#ffd85a] text-black font-semibold rounded-full shadow-lg"
-        >
-          Ver catálogo
-        </button>
-      </div>
+            <div className="mt-6 flex justify-center">
+              <button className="btn-yoquet" onClick={() => navigate("/productos")}>
+                Ver catálogo
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
     );
   }
 
-  /* ======================================================
-     Carrito lleno (100% local — funciona offline perfecto)
-====================================================== */
   return (
-    <div className="min-h-screen bg-[#2e2f33] text-white px-6 py-10">
-      <style>{`
-        .tarjeta {
-          background: #ffffff0d;
-          border: 1px solid #ffffff22;
-          border-radius: 20px;
-          padding: 1.5rem;
-        }
-        .btn-main {
-          background: linear-gradient(90deg,#ff66b3,#ffd85a);
-          color:#111;
-          padding: .8rem 2rem;
-          font-weight:600;
-          border-radius:9999px;
-        }
-      `}</style>
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-8 pb-14">
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
+              <span
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                Tu carrito
+              </span>
+            </h1>
+            <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
+              Artículos: {totalItems}
+            </p>
+          </div>
 
-      {/* Título */}
-      <h2
-        className="text-4xl font-extrabold text-center mb-10
-        bg-gradient-to-r from-[#ffd85a] via-[#ff66b3] to-[#42e2b8]
-        bg-clip-text text-transparent"
-      >
-        🛒 Tu carrito
-      </h2>
-
-      {/* Contenedor */}
-      <div className="tarjeta max-w-5xl mx-auto shadow-xl">
-
-        {/* Encabezado */}
-        <div className="grid grid-cols-6 text-sm font-semibold text-white/70 mb-3">
-          <div className="col-span-3">Producto</div>
-          <div className="text-center">Cant.</div>
-          <div className="text-center">Precio</div>
-          <div className="text-right">Subtotal</div>
+          <button className="btn-yoquet-ghost" onClick={vaciarCarrito}>
+            Vaciar
+          </button>
         </div>
 
-        {/* ITEMS */}
-        {carrito.map((item) => (
-          <div
-            key={item.id}
-            className="grid grid-cols-6 items-center py-3 border-b border-white/10"
-          >
-            {/* Producto + imagen */}
-            <div className="col-span-3 flex items-center gap-4">
-              <img
-                src={sanitizeImg(item.imagen)}
-                alt={sanitizeText(item.nombre)}
-                className="w-16 h-16 rounded-xl object-cover border border-[#ffd85a]/40"
-                onError={(e) => (e.currentTarget.src = "/fallback.webp")}
-              />
-              <div>
-                <p className="font-semibold">{sanitizeText(item.nombre)}</p>
-                <button
-                  onClick={() => quitarProducto(item.id)}
-                  className="text-xs text-[#ff8a7b]"
-                >
-                  Eliminar
-                </button>
+        <div className="mt-7 card-yoquet p-4 sm:p-6 overflow-hidden">
+          {/* Header tabla */}
+          <div className="hidden md:grid grid-cols-6 text-xs font-extrabold pb-3" style={{ color: "var(--muted)" }}>
+            <div className="col-span-3">Producto</div>
+            <div className="text-center">Cant.</div>
+            <div className="text-center">Precio</div>
+            <div className="text-right">Subtotal</div>
+          </div>
+
+          {/* Items */}
+          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+            {carrito.map((item) => (
+              <div key={item.id} className="py-4 grid grid-cols-1 md:grid-cols-6 items-center gap-4">
+                {/* Producto */}
+                <div className="md:col-span-3 flex items-center gap-4">
+                  <img
+                    src={sanitizeImg(item.imagen)}
+                    alt={sanitizeText(item.nombre)}
+                    className="w-16 h-16 rounded-2xl object-cover"
+                    style={{ border: "1px solid var(--border)" }}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => (e.currentTarget.src = "/fallback.webp")}
+                  />
+
+                  <div className="min-w-0">
+                    <div className="font-extrabold truncate" style={{ color: "var(--text)" }}>
+                      {sanitizeText(item.nombre)}
+                    </div>
+                    <button
+                      onClick={() => quitarProducto(item.id)}
+                      className="text-xs font-extrabold mt-1"
+                      style={{ color: "rgba(255, 102, 179, 0.95)" }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cantidad */}
+                <div className="flex items-center justify-start md:justify-center gap-2">
+                  <button
+                    onClick={() => eliminarDelCarrito(item.id)}
+                    className="chip"
+                    aria-label="Quitar uno"
+                  >
+                    −
+                  </button>
+
+                  <span className="font-extrabold" style={{ color: "var(--text)" }}>
+                    {item.cantidad}
+                  </span>
+
+                  <button
+                    onClick={() => agregarAlCarrito(item)}
+                    className="chip"
+                    aria-label="Agregar uno"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Precio */}
+                <div className="text-left md:text-center font-extrabold" style={{ color: "var(--text)" }}>
+                  ${item.precio}
+                </div>
+
+                {/* Subtotal */}
+                <div className="text-left md:text-right font-extrabold" style={{ color: "var(--text)" }}>
+                  ${(item.precio * item.cantidad).toFixed(2)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Totales */}
+          <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
+            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+              Seguir comprando
+            </button>
+
+            <div className="text-right">
+              <div className="text-sm font-extrabold" style={{ color: "var(--muted)" }}>
+                Total
+              </div>
+              <div className="text-3xl font-extrabold" style={{ color: "var(--text)" }}>
+                ${totalPrecio.toFixed(2)}
               </div>
             </div>
-
-            {/* Cantidad */}
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => eliminarDelCarrito(item.id)}
-                className="w-7 h-7 flex justify-center items-center border border-[#ffd85a] text-[#ffd85a] rounded-full"
-              >
-                −
-              </button>
-
-              <span className="font-semibold">{item.cantidad}</span>
-
-              <button
-                onClick={() => agregarAlCarrito(item)}
-                className="w-7 h-7 flex justify-center items-center border border-[#ffd85a] text-[#ffd85a] rounded-full"
-              >
-                +
-              </button>
-            </div>
-
-            {/* Precio unitario */}
-            <div className="text-center text-[#ffd85a] font-medium">
-              ${item.precio}
-            </div>
-
-            {/* Subtotal */}
-            <div className="text-right font-bold">
-              ${(item.precio * item.cantidad).toFixed(2)}
-            </div>
           </div>
-        ))}
 
-        {/* Totales */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            onClick={vaciarCarrito}
-            className="text-sm text-[#ffd85a] hover:underline"
-          >
-            Vaciar carrito
-          </button>
+          {/* CTA */}
+          <div className="mt-7 flex justify-center gap-3 flex-wrap">
+            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+              Volver al catálogo
+            </button>
 
-          <div className="text-right">
-            <p className="text-sm text-white/60">
-              Artículos:{" "}
-              <span className="font-semibold text-[#ffd85a]">{totalItems}</span>
-            </p>
-
-            <p
-              className="text-3xl font-extrabold 
-              bg-gradient-to-r from-[#ffd85a] via-[#ff66b3] to-[#42e2b8]
-              bg-clip-text text-transparent"
+            <button
+              className={online ? "btn-yoquet" : "btn-yoquet-ghost"}
+              disabled={!online}
+              onClick={() => online && navigate("/checkout")}
+              title={!online ? "Necesitás conexión para finalizar" : "Finalizar compra"}
             >
-              Total: ${totalPrecio.toFixed(2)}
-            </p>
+              {online ? "Finalizar compra" : "Sin conexión"}
+            </button>
           </div>
         </div>
-
-        {/* Botones Finales */}
-        <div className="mt-10 flex flex-col sm:flex-row gap-6 justify-center">
-          <button onClick={() => navigate("/productos")} className="btn-main">
-            Seguir comprando ✨
-          </button>
-
-          <button
-            disabled={!online}
-            onClick={() => online && navigate("/checkout")}
-            className={`px-10 py-3 rounded-full font-semibold transition
-              ${online
-                ? "border-2 border-[#ffd85a] text-[#ffd85a] hover:bg-[#fff8dd]/10"
-                : "bg-gray-700 text-gray-400 border-gray-700 cursor-not-allowed"}
-  `}
-          >
-            {online ? "Finalizar compra 💳" : "Sin conexión"}
-          </button>
-
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
-

@@ -1,79 +1,88 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import logoYoquet from "../assets_opt/optimized/logo_Yoquet.webp";
 
 export default function Confirmacion() {
   const navigate = useNavigate();
 
+  const fecha = useMemo(() => new Date().toLocaleDateString(), []);
+
   useEffect(() => {
-    const timer = setTimeout(() => navigate("/empaquetando"), 1800);
+    const timer = setTimeout(() => navigate("/empaquetando", { replace: true }), 1200);
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center min-h-screen px-6 text-center 
-                 bg-[#3b3d45] text-white"
-    >
-      {/* TARJETA PRINCIPAL */}
-      <motion.div
-        initial={{ scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white/85 text-[#3d2b1f] rounded-2xl shadow-xl 
-                   border border-[#e7dcc5] w-full max-w-md p-8"
-      >
-        <h1 className="text-2xl font-bold mb-4 
-                       bg-gradient-to-r from-[#ff66b3] via-[#ffd85a] to-[#42e2b8] 
-                       bg-clip-text text-transparent">
-          Compra confirmada
-        </h1>
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-10 pb-14">
+        <div className="card-yoquet p-7 sm:p-10 max-w-xl mx-auto text-center">
+          <img
+            src={logoYoquet}
+            alt="Yoquet Diseños"
+            className="w-40 sm:w-44 mx-auto"
+            loading="eager"
+            decoding="async"
+          />
 
-        <p className="text-sm text-[#5a4a3c] mb-6 leading-relaxed">
-          ¡Tu pedido se registró correctamente!  
-          Preparando el comprobante digital ✨
-        </p>
-
-        {/* TICKET SIMPLE */}
-        <div className="border-t border-b border-dashed border-[#b08c4e]/40 py-4 text-sm leading-relaxed">
-          <p>
-            Estado:{" "}
-            <span className="font-semibold text-[#b08c4e]">Pagado ✔️</span>
-          </p>
-          <p>
-            Fecha:{" "}
-            <span className="font-semibold">
-              {new Date().toLocaleDateString()}
+          <h1 className="mt-6 text-3xl sm:text-4xl">
+            <span
+              style={{
+                background:
+                  "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Compra confirmada
             </span>
+          </h1>
+
+          <p className="mt-2 text-sm sm:text-base" style={{ color: "var(--muted)", fontWeight: 700 }}>
+            Tu pedido se registró correctamente. Estamos preparando el comprobante.
           </p>
-        </div>
 
-        {/* ÍCONO DECORATIVO LIVIANO */}
-        <div className="flex justify-center mt-6">
-          <motion.div
-            animate={{ scale: [1, 1.06, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity }}
-            className="w-20 h-20 rounded-xl flex items-center justify-center 
-                       bg-gradient-to-br from-[#ff66b3] via-[#ffd85a] to-[#42e2b8]"
+          <div
+            className="mt-6 p-5 rounded-3xl text-left"
+            style={{
+              background: "rgba(255,255,255,0.65)",
+              border: "1px dashed rgba(61,43,31,0.22)",
+              color: "var(--text)",
+            }}
           >
-            <span className="text-[#3b3d45] font-bold text-sm">OK</span>
-          </motion.div>
-        </div>
-      </motion.div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-extrabold">Estado</div>
+              <div className="text-sm font-extrabold" style={{ color: "var(--color-turquesa)" }}>
+                Pagado ✓
+              </div>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div className="text-sm font-extrabold">Fecha</div>
+              <div className="text-sm font-extrabold">{fecha}</div>
+            </div>
+          </div>
 
-      {/* TEXTO ANIMADO SUTIL Y LIVIANO */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="mt-8 text-sm text-[#f0e4c3]/80"
-      >
-        Redirigiendo…
-      </motion.p>
-    </motion.div>
+          <div
+            className="mt-6 p-4 rounded-3xl text-xs font-bold"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,102,179,0.10), rgba(255,216,90,0.10), rgba(66,226,184,0.10))",
+              border: "1px solid rgba(61,43,31,0.10)",
+              color: "var(--muted)",
+            }}
+          >
+            Redirigiendo a “Empaquetando”…
+          </div>
+
+          <div className="mt-6 flex justify-center gap-3 flex-wrap">
+            <button className="btn-yoquet" onClick={() => navigate("/empaquetando", { replace: true })}>
+              Continuar
+            </button>
+            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
+              Volver al catálogo
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

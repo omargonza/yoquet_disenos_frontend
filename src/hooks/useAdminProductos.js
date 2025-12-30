@@ -7,8 +7,13 @@ export function useAdminProductos() {
   const [pagina, setPagina] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // NUEVO: paginación real DRF
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+
   useEffect(() => {
     cargarProductos(pagina);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagina]);
 
   async function cargarProductos(p) {
@@ -17,10 +22,18 @@ export function useAdminProductos() {
 
       const data = await obtenerProductos(p);
 
-      setProductos(data.results || []);
-      setCount(data.count || 0);
+      setProductos(Array.isArray(data?.results) ? data.results : []);
+      setCount(Number(data?.count || 0));
+
+      // DRF pagination: next/previous suelen ser URL o null
+      setHasNext(Boolean(data?.next));
+      setHasPrev(Boolean(data?.previous));
     } catch (err) {
       console.error("Error cargando productos admin:", err);
+      setProductos([]);
+      setCount(0);
+      setHasNext(false);
+      setHasPrev(p > 1); // fallback
     } finally {
       setLoading(false);
     }
@@ -32,5 +45,7 @@ export function useAdminProductos() {
     pagina,
     setPagina,
     loading,
+    hasNext,
+    hasPrev,
   };
 }

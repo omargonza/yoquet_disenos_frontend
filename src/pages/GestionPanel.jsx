@@ -1,58 +1,149 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
 import PendientesGrid from "../components/gestion/PendientesGrid.jsx";
 import LoadingModal from "../components/gestion/LoadingModal.jsx";
 import { obtenerPendientes, subirLote } from "../services/gestionApi.js";
 
 export default function GestionPanel() {
-    const [pendientes, setPendientes] = useState([]);
-    const [cargando, setCargando] = useState(false);
-    const [progreso, setProgreso] = useState(0);
+  const [pendientes, setPendientes] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [progreso, setProgreso] = useState(0);
+  const [error, setError] = useState("");
 
-    const cargarPendientes = async () => {
-        const res = await obtenerPendientes();
-        setPendientes(res.data);
-    };
+  const total = pendientes.length;
 
-    useEffect(() => {
-        cargarPendientes();
-    }, []);
+  const cargarPendientes = async () => {
+    try {
+      setError("");
+      const res = await obtenerPendientes();
+      // Asumimos array directo; si viene {results: []} lo soportamos también
+      const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+      setPendientes(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setError("No se pudieron cargar los pendientes.");
+      setPendientes([]);
+    }
+  };
 
-    const procesarLote = async () => {
-        if (!pendientes.length) return;
+  useEffect(() => {
+    cargarPendientes();
+  }, []);
 
-        setCargando(true);
+  const nombres = useMemo(() => pendientes.map((p) => p.filename).filter(Boolean), [pendientes]);
 
-        const nombres = pendientes.map(p => p.filename);
-        await subirLote(nombres);
+  const procesarLote = async () => {
+    if (!nombres.length || cargando) return;
 
-        setProgreso(100);
-        await new Promise(r => setTimeout(r, 500));
+    try {
+      setError("");
+      setCargando(true);
+      setProgreso(10);
 
-        setCargando(false);
-        cargarPendientes();
-    };
+      await subirLote(nombres);
 
-    return (
-        <div className="min-h-screen p-6 bg-gray-100">
-            <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-4xl font-bold mb-6"
-            >
-                Panel de Gestión — Importador
-            </motion.h1>
+      setProgreso(100);
+      await new Promise((r) => setTimeout(r, 450));
+      await cargarPendientes();
+    } catch (e) {
+      console.error(e);
+      setError("Falló el procesamiento del lote.");
+    } finally {
+      setCargando(false);
+      setTimeout(() => setProgreso(0), 250);
+    }
+  };
 
-            <button
+  return (
+    <main className="min-h-[calc(100vh-72px)]">
+      <section className="container-yoquet pt-8 pb-14">
+        {/* Header */}
+        <div className="card-yoquet p-6 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl sm:text-4xl font-extrabold">
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
+                    WebkitBackgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  Panel de Gestión
+                </span>
+              </h1>
+
+              <p className="mt-1 text-sm font-bold" style={{ color: "var(--muted)" }}>
+                Importador de catálogo. Pendientes detectados automáticamente.
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="chip is-active">Pendientes: {total}</span>
+                <button className="chip" onClick={cargarPendientes}>
+                  Refrescar
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:items-end gap-2">
+              <button
                 onClick={procesarLote}
-                className="mb-6 py-3 px-6 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700"
-            >
-                Subir todos
-            </button>
+                disabled={!nombres.length || cargando}
+                className="btn-yoquet"
+                style={{
+                  opacity: !nombres.length || cargando ? 0.6 : 1,
+                  pointerEvents: !nombres.length || cargando ? "none" : "auto",
+                }}
+              >
+                {cargando ? "Procesando…" : "Subir todos"}
+              </button>
 
-            <PendientesGrid pendientes={pendientes} refrescar={cargarPendientes} />
-            <LoadingModal visible={cargando} progreso={progreso} />
+              <div className="text-xs font-bold" style={{ color: "var(--muted)" }}>
+                {nombres.length ? `Archivos: ${nombres.length}` : "No hay archivos para subir"}
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <div
+              className="mt-5 p-3 rounded-2xl text-sm font-bold"
+              style={{
+                background: "rgba(255,102,179,0.10)",
+                border: "1px solid rgba(61,43,31,0.10)",
+                color: "var(--text)",
+              }}
+            >
+              {error}
+            </div>
+          )}
         </div>
-    );
+
+        {/* Grid */}
+        <div className="mt-6 card-yoquet p-4 sm:p-6">
+          {total === 0 ? (
+            <div className="p-6 text-center">
+              <div className="text-lg font-extrabold" style={{ color: "var(--text)" }}>
+                No hay pendientes
+              </div>
+              <p className="mt-1 text-sm font-bold" style={{ color: "var(--muted)" }}>
+                Cuando haya archivos nuevos, van a aparecer acá.
+              </p>
+
+              <div className="mt-5 flex justify-center">
+                <button className="btn-yoquet-ghost" onClick={cargarPendientes}>
+                  Volver a buscar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <PendientesGrid pendientes={pendientes} refrescar={cargarPendientes} />
+          )}
+        </div>
+
+        {/* Modal */}
+        <LoadingModal visible={cargando} progreso={progreso} />
+      </section>
+    </main>
+  );
 }

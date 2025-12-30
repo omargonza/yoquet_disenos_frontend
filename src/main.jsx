@@ -31,9 +31,9 @@ root.render(
   </BrowserRouter>
 );
 
-registerSW({
-  immediate: true,
-});
+//registerSW({
+  //immediate: true,
+//});
 
 
 
