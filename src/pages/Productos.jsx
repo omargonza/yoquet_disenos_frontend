@@ -16,6 +16,17 @@ const sanitizeImg = (url) => {
   return url.replace(/["'<>]/g, "");
 };
 
+// ✅ Cloudinary transform (thumbs livianas)
+const cloudThumb = (url, w = 600) => {
+  const clean = sanitizeImg(url);
+  if (!clean.startsWith("http")) return clean;
+  if (!clean.includes("/image/upload/")) return clean;
+  return clean.replace(
+    "/image/upload/",
+    `/image/upload/f_auto,q_auto,w_${w},c_fill/`
+  );
+};
+
 /* Cache en memoria (solo sesión) */
 const pageCache = new Map(); // key: `${page}|${catId}|${q}` -> { results, next, previous, count }
 
@@ -26,7 +37,12 @@ export default function Productos() {
   const { agregarAlCarrito } = useCarrito();
   const { showToast } = useToast();
 
-  const [data, setData] = useState({ results: [], next: null, previous: null, count: 0 });
+  const [data, setData] = useState({
+    results: [],
+    next: null,
+    previous: null,
+    count: 0,
+  });
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -110,8 +126,6 @@ export default function Productos() {
         const params = new URLSearchParams();
         params.set("page", String(p));
         params.set("page_size", "24");
-
-        // 🔎 DRF típico: SearchFilter usa `search=`
         if (qForFetch) params.set("search", qForFetch);
 
         const url = catIdForFetch
@@ -129,8 +143,19 @@ export default function Productos() {
           count: Number(res.data.count || 0),
         };
 
+        // Cache memoria (rápido)
         pageCache.set(key, payload);
-        localStorage.setItem(lsKey, JSON.stringify(payload));
+
+        // ✅ Persistencia diferida (no bloquear main thread)
+        const persist = () => {
+          try {
+            localStorage.setItem(lsKey, JSON.stringify(payload));
+          } catch {}
+        };
+        if (!prefetch) {
+          if ("requestIdleCallback" in window) requestIdleCallback(persist, { timeout: 1500 });
+          else setTimeout(persist, 800);
+        }
 
         if (!prefetch) setData(payload);
 
@@ -151,8 +176,11 @@ export default function Productos() {
       const res = await fetchPage(page);
       if (!mounted || !res) return;
 
+      // ✅ Prefetch en idle (no penaliza LCP / first paint)
       if (res.next && navigator.onLine) {
-        fetchPage(page + 1, { prefetch: true });
+        const cb = () => fetchPage(page + 1, { prefetch: true });
+        if ("requestIdleCallback" in window) requestIdleCallback(cb, { timeout: 1500 });
+        else setTimeout(cb, 900);
       }
     })();
 
@@ -171,17 +199,7 @@ export default function Productos() {
   const hasPrev = !!data.previous && page > 1;
   const hasNext = !!data.next;
 
-  if (loading) {
-    return (
-      <div className="container-yoquet py-12">
-        <div className="card-yoquet p-6">
-          <div className="skeleton h-7 w-44" />
-          <div className="skeleton h-4 w-72 mt-3" />
-          <div className="skeleton h-10 w-40 mt-6 rounded-full" />
-        </div>
-      </div>
-    );
-  }
+  const skeletonItems = useMemo(() => Array.from({ length: 12 }), []);
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
@@ -199,7 +217,7 @@ export default function Productos() {
       )}
 
       <section className="container-yoquet pt-6 pb-12">
-        {/* === Micro-hero editorial (mobile-first, liviano) === */}
+        {/* Micro-hero */}
         <div
           className="rounded-3xl p-4"
           style={{
@@ -245,7 +263,6 @@ export default function Productos() {
             </div>
           </div>
 
-          {/* Barra de contexto + CTAs livianos */}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {catParamId ? (
               <>
@@ -309,93 +326,109 @@ export default function Productos() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Grid (no bloquea render) */}
         <div
           className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
           style={{ animation: "yqFadeIn .22s ease" }}
         >
-          {productos.map((p) => {
-            const isNuevo = Number(p.id) > 120; // ajustá según tu dataset real
-            const isPremium = Number(p.precio) >= 15000; // ajustá umbral a tu realidad
-
-            return (
-              <article
-                key={p.id}
-                className="card-yoquet overflow-hidden cursor-pointer relative"
-                onClick={() => navigate(`/productos/${p.id}`)}
-              >
-                {/* Badges (livianos) */}
-                <div className="absolute top-3 left-3 flex gap-2 z-10">
-                  {isNuevo && (
-                    <span
-                      className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                      style={{
-                        background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
-                        color: "white",
-                        border: "1px solid rgba(255,255,255,0.60)",
-                        boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-                      }}
-                    >
-                      Nuevo
-                    </span>
-                  )}
-
-                  {isPremium && (
-                    <span
-                      className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                      style={{
-                        background: "rgba(255,255,255,0.86)",
-                        color: "var(--text)",
-                        border: "1px solid var(--border)",
-                        boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Premium
-                    </span>
-                  )}
-                </div>
-
-                <img
-                  src={sanitizeImg(p.imagen)}
-                  alt={sanitizeText(p.nombre)}
-                  className="w-full h-56 object-cover"
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => (e.currentTarget.src = "/fallback.webp")}
-                />
-
-                <div className="p-4">
-                  <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
-                    {sanitizeText(p.nombre)}
-                  </h3>
-
-                  <p
-                    className="text-sm mt-1 line-clamp-2"
-                    style={{ color: "var(--muted)", fontWeight: 700 }}
-                  >
-                    {sanitizeText(p.descripcion)}
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
-                      ${p.precio}
+          {loading
+            ? skeletonItems.map((_, i) => (
+                <div key={i} className="card-yoquet overflow-hidden">
+                  <div className="skeleton h-56 w-full" />
+                  <div className="p-4">
+                    <div className="skeleton h-6 w-3/4" />
+                    <div className="skeleton h-4 w-full mt-3" />
+                    <div className="skeleton h-4 w-2/3 mt-2" />
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="skeleton h-7 w-24" />
+                      <div className="skeleton h-10 w-28 rounded-full" />
                     </div>
-
-                    <button
-                      type="button"
-                      className="btn-yoquet"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAdd(p);
-                      }}
-                    >
-                      Agregar
-                    </button>
                   </div>
                 </div>
-              </article>
-            );
-          })}
+              ))
+            : productos.map((p) => {
+                const isNuevo = Number(p.id) > 120;
+                const isPremium = Number(p.precio) >= 15000;
+
+                return (
+                  <article
+                    key={p.id}
+                    className="card-yoquet overflow-hidden cursor-pointer relative"
+                    onClick={() => navigate(`/productos/${p.id}`)}
+                  >
+                    <div className="absolute top-3 left-3 flex gap-2 z-10">
+                      {isNuevo && (
+                        <span
+                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                          style={{
+                            background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
+                            color: "white",
+                            border: "1px solid rgba(255,255,255,0.60)",
+                            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+                          }}
+                        >
+                          Nuevo
+                        </span>
+                      )}
+                      {isPremium && (
+                        <span
+                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                          style={{
+                            background: "rgba(255,255,255,0.86)",
+                            color: "var(--text)",
+                            border: "1px solid var(--border)",
+                            boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          Premium
+                        </span>
+                      )}
+                    </div>
+
+                    <img
+                      src={cloudThumb(p.imagen, 600)}
+                      alt={sanitizeText(p.nombre)}
+                      className="w-full h-56 object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/fallback.webp";
+                      }}
+                    />
+
+                    <div className="p-4">
+                      <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
+                        {sanitizeText(p.nombre)}
+                      </h3>
+
+                      <p
+                        className="text-sm mt-1 line-clamp-2"
+                        style={{ color: "var(--muted)", fontWeight: 700 }}
+                      >
+                        {sanitizeText(p.descripcion)}
+                      </p>
+
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                          ${p.precio}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn-yoquet"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdd(p);
+                          }}
+                        >
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
         </div>
 
         {/* Paginación */}
@@ -426,7 +459,6 @@ export default function Productos() {
         </div>
       </section>
 
-      {/* Keyframes livianos inlined */}
       <style>{`
         @keyframes yqFadeIn {
           from { opacity: 0; transform: translateY(4px); }
