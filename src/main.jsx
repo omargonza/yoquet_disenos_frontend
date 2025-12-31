@@ -10,7 +10,6 @@ import { CarritoProvider } from "./context/CarritoContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AuthProvider } from "./context/AuthContext";
 
-import { registerSW } from "virtual:pwa-register";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -31,9 +30,17 @@ root.render(
   </BrowserRouter>
 );
 
-//registerSW({
-  //immediate: true,
-//});
+if (import.meta.env.PROD) {
+  window.addEventListener("load", async () => {
+    try {
+      const { registerSW } = await import("virtual:pwa-register");
+      registerSW({ immediate: true });
+    } catch {
+      // silencioso
+    }
+  });
+}
+
 
 
 

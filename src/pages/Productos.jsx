@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../utils/api";
 import { useCarrito } from "../context/CarritoContext";
@@ -16,61 +16,49 @@ const sanitizeImg = (url) => {
   return url.replace(/["'<>]/g, "");
 };
 
-export default function Productos() {
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [offline, setOffline] = useState(!navigator.onLine);
+/* Cache en memoria (solo sesión) */
+const pageCache = new Map(); // key: `${page}|${catId}|${q}` -> { results, next, previous, count }
 
-  const { agregarAlCarrito } = useCarrito();
-  const { showToast } = useToast();
+export default function Productos() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* Carga inicial (cache + refresh) */
-  useEffect(() => {
-    let mounted = true;
+  const { agregarAlCarrito } = useCarrito();
+  const { showToast } = useToast();
 
-    async function load() {
-      const cachedProd = localStorage.getItem("cache_prod");
-      const cachedCat = localStorage.getItem("cache_cat");
+  const [data, setData] = useState({ results: [], next: null, previous: null, count: 0 });
+  const [page, setPage] = useState(1);
 
-      if (cachedProd && cachedCat) {
-        if (!mounted) return;
-        setProductos(JSON.parse(cachedProd));
-        setCategorias(JSON.parse(cachedCat));
-        setLoading(false);
-      }
+  const [loading, setLoading] = useState(true);
+  const [offline, setOffline] = useState(!navigator.onLine);
 
-      try {
-        const [prodRes, catRes] = await Promise.all([
-          api.get("/api/productos/", { timeout: 20000 }),
-          api.get("/api/categorias/", { timeout: 20000 }),
-        ]);
+  const reqIdRef = useRef(0);
 
-        if (!mounted) return;
+  // ✅ cat desde URL
+  const catParamId = useMemo(() => {
+    const sp = new URLSearchParams(location.search);
+    const v = sp.get("cat");
+    return v ? Number(v) : null;
+  }, [location.search]);
 
-        const prod = prodRes.data.results || prodRes.data;
-        const cat = catRes.data.results || catRes.data;
+  // ✅ q desde URL
+  const qParam = useMemo(() => {
+    const sp = new URLSearchParams(location.search);
+    const v = sp.get("q");
+    return v ? String(v).trim() : "";
+  }, [location.search]);
 
-        setProductos(Array.isArray(prod) ? prod : []);
-        setCategorias(Array.isArray(cat) ? cat : []);
+  const setQueryParam = useCallback(
+    (key, valueOrNull) => {
+      const sp = new URLSearchParams(location.search);
+      if (valueOrNull == null || String(valueOrNull).trim() === "") sp.delete(key);
+      else sp.set(key, String(valueOrNull));
+      navigate(`/productos?${sp.toString()}`);
+    },
+    [location.search, navigate]
+  );
 
-        localStorage.setItem("cache_prod", JSON.stringify(prod));
-        localStorage.setItem("cache_cat", JSON.stringify(cat));
-      } catch (e) {
-        // UX: silencioso, usa cache
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    load();
-    return () => (mounted = false);
-  }, []);
-
-  /* Detectar online/offline */
+  // Online/offline
   useEffect(() => {
     const on = () => setOffline(false);
     const off = () => setOffline(true);
@@ -82,21 +70,94 @@ export default function Productos() {
     };
   }, []);
 
-  /* Si venimos desde Header chips: location.state?.categoriaId */
+  // ✅ al cambiar categoría o búsqueda, resetea page e invalida requests viejas
   useEffect(() => {
-    const cid = location.state?.categoriaId;
-    if (!cid || !Array.isArray(categorias) || categorias.length === 0) return;
-    const found = categorias.find((c) => c.id === cid);
-    if (found) setCategoriaSeleccionada(found);
-    // limpiamos state para no “persistir” al volver
-    if (cid) navigate(location.pathname, { replace: true, state: {} });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categorias]);
+    setPage(1);
+    reqIdRef.current += 1;
+  }, [catParamId, qParam]);
 
-  const productosFiltrados = useMemo(() => {
-    if (!categoriaSeleccionada) return productos;
-    return productos.filter((p) => p.categoria?.id === categoriaSeleccionada.id);
-  }, [productos, categoriaSeleccionada]);
+  const fetchPage = useCallback(
+    async (p, { prefetch = false } = {}) => {
+      const catIdForFetch = catParamId || "";
+      const qForFetch = qParam || "";
+      const key = `${p}|${catIdForFetch}|${qForFetch}`;
+
+      // 1) cache memoria
+      if (pageCache.has(key)) {
+        const cached = pageCache.get(key);
+        if (!prefetch) setData(cached);
+        return cached;
+      }
+
+      // 2) cache localStorage
+      const lsKey = `cache_prod_page_${key}`;
+      const cachedLS = localStorage.getItem(lsKey);
+      if (cachedLS) {
+        try {
+          const parsed = JSON.parse(cachedLS);
+          pageCache.set(key, parsed);
+          if (!prefetch) setData(parsed);
+          return parsed;
+        } catch {
+          // noop
+        }
+      }
+
+      const myReqId = ++reqIdRef.current;
+      if (!prefetch) setLoading(true);
+
+      try {
+        const params = new URLSearchParams();
+        params.set("page", String(p));
+        params.set("page_size", "24");
+
+        // 🔎 DRF típico: SearchFilter usa `search=`
+        if (qForFetch) params.set("search", qForFetch);
+
+        const url = catIdForFetch
+          ? `/api/productos/por-categoria/${catIdForFetch}/?${params.toString()}`
+          : `/api/productos/?${params.toString()}`;
+
+        const res = await api.get(url, { timeout: 20000 });
+
+        if (!prefetch && myReqId !== reqIdRef.current) return null;
+
+        const payload = {
+          results: Array.isArray(res.data.results) ? res.data.results : [],
+          next: res.data.next || null,
+          previous: res.data.previous || null,
+          count: Number(res.data.count || 0),
+        };
+
+        pageCache.set(key, payload);
+        localStorage.setItem(lsKey, JSON.stringify(payload));
+
+        if (!prefetch) setData(payload);
+
+        return payload;
+      } catch {
+        return null;
+      } finally {
+        if (!prefetch) setLoading(false);
+      }
+    },
+    [catParamId, qParam]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      const res = await fetchPage(page);
+      if (!mounted || !res) return;
+
+      if (res.next && navigator.onLine) {
+        fetchPage(page + 1, { prefetch: true });
+      }
+    })();
+
+    return () => (mounted = false);
+  }, [page, catParamId, qParam, fetchPage]);
 
   const handleAdd = useCallback(
     (p) => {
@@ -105,6 +166,10 @@ export default function Productos() {
     },
     [agregarAlCarrito, showToast]
   );
+
+  const productos = useMemo(() => data.results, [data.results]);
+  const hasPrev = !!data.previous && page > 1;
+  const hasNext = !!data.next;
 
   if (loading) {
     return (
@@ -133,98 +198,241 @@ export default function Productos() {
         </div>
       )}
 
-      <section className="container-yoquet pt-8 pb-12">
-        {/* Header */}
-        <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
-              <span
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
-                  WebkitBackgroundClip: "text",
-                  color: "transparent",
-                }}
+      <section className="container-yoquet pt-6 pb-12">
+        {/* === Micro-hero editorial (mobile-first, liviano) === */}
+        <div
+          className="rounded-3xl p-4"
+          style={{
+            border: "1px solid var(--border)",
+            background:
+              "radial-gradient(520px 240px at 20% 0%, rgba(255,102,179,0.18), transparent 55%)," +
+              "radial-gradient(460px 220px at 80% 10%, rgba(66,226,184,0.18), transparent 55%)," +
+              "radial-gradient(420px 220px at 40% 100%, rgba(255,216,90,0.16), transparent 60%)," +
+              "rgba(255,255,255,0.66)",
+            backdropFilter: "blur(6px) saturate(140%)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div
+                className="text-[11px] font-extrabold tracking-wide uppercase"
+                style={{ color: "var(--muted)" }}
               >
-                Catálogo
-              </span>
-            </h1>
-            <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
-              Explorá y sumá al carrito en un toque.
-            </p>
+                Yoquet Diseños · artesanal & festivo
+              </div>
+
+              <h2 className="mt-1 text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                Catálogo para celebrar con estilo
+              </h2>
+
+              <p className="mt-2 text-sm font-bold leading-snug" style={{ color: "var(--muted)" }}>
+                Piezas listas para regalar, decorar y sorprender. Coloridas y premium, sin perder calidez.
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              <div
+                className="rounded-2xl px-3 py-2 text-xs font-extrabold"
+                style={{
+                  background: "rgba(255,255,255,0.75)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                }}
+                title="Cantidad total de productos (según backend)"
+              >
+                {data.count} items
+              </div>
+            </div>
           </div>
 
-          <button className="btn-yoquet-ghost" onClick={() => navigate("/carrito")}>
-            Ir al carrito
-          </button>
-        </div>
+          {/* Barra de contexto + CTAs livianos */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {catParamId ? (
+              <>
+                <span className="chip is-active">Filtrando</span>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => {
+                    const sp = new URLSearchParams(location.search);
+                    sp.delete("cat");
+                    navigate(`/productos?${sp.toString()}`);
+                  }}
+                  title="Quitar filtro de categoría"
+                >
+                  Ver todo
+                </button>
+              </>
+            ) : (
+              <span className="chip is-active">Explorá por categorías arriba</span>
+            )}
 
-        {/* Filtros */}
-        <div className="mt-7 flex gap-2 flex-wrap">
-          <button
-            className={categoriaSeleccionada ? "chip" : "chip is-active"}
-            onClick={() => setCategoriaSeleccionada(null)}
-          >
-            Todas
-          </button>
+            {qParam ? (
+              <span
+                className="chip"
+                title="Búsqueda activa"
+                style={{
+                  background: "rgba(255,255,255,0.80)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                Buscando: {sanitizeText(qParam)}
+              </span>
+            ) : null}
 
-          {categorias.map((c) => (
-            <button
-              key={c.id}
-              className={categoriaSeleccionada?.id === c.id ? "chip is-active" : "chip"}
-              onClick={() => setCategoriaSeleccionada(c)}
-              title={sanitizeText(c.nombre)}
-            >
-              {sanitizeText(c.nombre)}
-            </button>
-          ))}
+            {qParam ? (
+              <button
+                type="button"
+                className="chip"
+                onClick={() => setQueryParam("q", null)}
+                title="Limpiar búsqueda"
+              >
+                Limpiar
+              </button>
+            ) : null}
+
+            <div className="flex-1" />
+
+            <div className="flex gap-2 overflow-x-auto scrollbar-none">
+              {["Cumples", "Souvenirs", "Navidad", "Deco"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="chip"
+                  onClick={() => setQueryParam("q", t)}
+                  title={`Buscar: ${t}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Grid */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {productosFiltrados.map((p) => (
-            <article
-              key={p.id}
-              className="card-yoquet overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/productos/${p.id}`)}
-            >
-              <img
-                src={sanitizeImg(p.imagen)}
-                alt={sanitizeText(p.nombre)}
-                className="w-full h-56 object-cover"
-                loading="lazy"
-                decoding="async"
-                onError={(e) => (e.currentTarget.src = "/fallback.webp")}
-              />
+        <div
+          className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+          style={{ animation: "yqFadeIn .22s ease" }}
+        >
+          {productos.map((p) => {
+            const isNuevo = Number(p.id) > 120; // ajustá según tu dataset real
+            const isPremium = Number(p.precio) >= 15000; // ajustá umbral a tu realidad
 
-              <div className="p-4">
-                <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
-                  {sanitizeText(p.nombre)}
-                </h3>
-                <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--muted)", fontWeight: 700 }}>
-                  {sanitizeText(p.descripcion)}
-                </p>
+            return (
+              <article
+                key={p.id}
+                className="card-yoquet overflow-hidden cursor-pointer relative"
+                onClick={() => navigate(`/productos/${p.id}`)}
+              >
+                {/* Badges (livianos) */}
+                <div className="absolute top-3 left-3 flex gap-2 z-10">
+                  {isNuevo && (
+                    <span
+                      className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                      style={{
+                        background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
+                        color: "white",
+                        border: "1px solid rgba(255,255,255,0.60)",
+                        boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+                      }}
+                    >
+                      Nuevo
+                    </span>
+                  )}
 
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
-                    ${p.precio}
-                  </div>
-
-                  <button
-                    className="btn-yoquet"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAdd(p);
-                    }}
-                  >
-                    Agregar
-                  </button>
+                  {isPremium && (
+                    <span
+                      className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                      style={{
+                        background: "rgba(255,255,255,0.86)",
+                        color: "var(--text)",
+                        border: "1px solid var(--border)",
+                        boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      Premium
+                    </span>
+                  )}
                 </div>
-              </div>
-            </article>
-          ))}
+
+                <img
+                  src={sanitizeImg(p.imagen)}
+                  alt={sanitizeText(p.nombre)}
+                  className="w-full h-56 object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => (e.currentTarget.src = "/fallback.webp")}
+                />
+
+                <div className="p-4">
+                  <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
+                    {sanitizeText(p.nombre)}
+                  </h3>
+
+                  <p
+                    className="text-sm mt-1 line-clamp-2"
+                    style={{ color: "var(--muted)", fontWeight: 700 }}
+                  >
+                    {sanitizeText(p.descripcion)}
+                  </p>
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                      ${p.precio}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-yoquet"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAdd(p);
+                      }}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Paginación */}
+        <div className="mt-10 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            className="btn-yoquet-ghost"
+            disabled={!hasPrev}
+            onClick={() => hasPrev && setPage((x) => Math.max(1, x - 1))}
+            style={!hasPrev ? { opacity: 0.55, pointerEvents: "none" } : undefined}
+          >
+            Anterior
+          </button>
+
+          <div className="text-sm font-extrabold" style={{ color: "var(--muted)" }}>
+            Página {page}
+          </div>
+
+          <button
+            type="button"
+            className="btn-yoquet-ghost"
+            disabled={!hasNext}
+            onClick={() => hasNext && setPage((x) => x + 1)}
+            style={!hasNext ? { opacity: 0.55, pointerEvents: "none" } : undefined}
+          >
+            Siguiente
+          </button>
         </div>
       </section>
+
+      {/* Keyframes livianos inlined */}
+      <style>{`
+        @keyframes yqFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </main>
   );
 }

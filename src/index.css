@@ -138,3 +138,28 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* === Productos: micro-hero + animaciones livianas === */
+.yq-hero {
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(600px 260px at 20% 0%, rgba(255,102,179,0.20), transparent 55%),
+    radial-gradient(520px 240px at 80% 10%, rgba(66,226,184,0.20), transparent 55%),
+    radial-gradient(420px 220px at 40% 100%, rgba(255,216,90,0.18), transparent 60%),
+    rgba(255,255,255,0.68);
+  backdrop-filter: blur(6px) saturate(140%);
+}
+
+.yq-fade-in {
+  animation: yqFadeIn .22s ease;
+}
+
+@keyframes yqFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.yq-badge {
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
