@@ -11,10 +11,12 @@ import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AuthProvider } from "./context/AuthContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-const BASENAME = import.meta.env.PROD ? "/online" : "/";
+
+// 👉 RENDER SIEMPRE USA "/"
+const BASENAME = "/";
 
 root.render(
-  <BrowserRouter  basename={BASENAME}>
+  <BrowserRouter basename={BASENAME}>
     <AuthProvider>
       <AdminAuthProvider>
         <CarritoProvider>
@@ -31,11 +33,11 @@ root.render(
 
 /**
  * PWA / Service Worker
- * DEV: no SW, limpia restos
- * PROD: registra SW
+ * - DEV: sin SW, limpia restos
+ * - PROD: registra SW
  */
 async function setupSW() {
-  // DEV → sin SW
+  // DEV → NO Service Worker
   if (import.meta.env.DEV) {
     if ("serviceWorker" in navigator) {
       try {
@@ -43,6 +45,7 @@ async function setupSW() {
         await Promise.all(regs.map((r) => r.unregister()));
       } catch {}
     }
+
     if ("caches" in window) {
       try {
         const keys = await caches.keys();
@@ -52,7 +55,7 @@ async function setupSW() {
     return;
   }
 
-  // PROD → registrar
+  // PROD → registrar SW
   window.addEventListener("load", async () => {
     try {
       const { registerSW } = await import("virtual:pwa-register");

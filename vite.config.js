@@ -3,52 +3,56 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ mode }) => {
-  const isProd = mode === "production";
   const BACKEND_ORIGIN = "https://yoquet-disenos-backend.onrender.com";
 
   return {
-    base: isProd ? "/online/" : "/",
+    // ✅ Render sirve en raíz
+    base: "/",
 
     plugins: [
       react(),
       VitePWA({
         registerType: "autoUpdate",
 
-        // Blindaje total
+        // ✅ no inyectar registro en index.html
         injectRegister: null,
+
+        // ✅ DEV sin SW
         devOptions: { enabled: false },
 
         includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
 
+        // ✅ Render/root
         manifest: {
-          id: "/online/",
+          id: "/",
           name: "Yoquet Diseños — Tienda & Gestión",
           short_name: "Yoquet",
           description: "Catálogo, tienda, carrito y gestión móvil.",
-          start_url: "/online/",
-          scope: "/online/",
+          start_url: "/",
+          scope: "/",
           display: "standalone",
           orientation: "portrait",
           background_color: "#fffaf6",
           theme_color: "#ff66b3",
           lang: "es-AR",
           icons: [
-            { src: "/online/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
-            { src: "/online/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
-            { src: "/online/icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
-            { src: "/online/icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
-            { src: "/online/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
-            { src: "/online/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-            { src: "/online/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
-            { src: "/online/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+            { src: "/icons/icon-72x72.png", sizes: "72x72", type: "image/png" },
+            { src: "/icons/icon-96x96.png", sizes: "96x96", type: "image/png" },
+            { src: "/icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+            { src: "/icons/icon-144x144.png", sizes: "144x144", type: "image/png" },
+            { src: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+            { src: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+            { src: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
+            { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
           ],
         },
 
         workbox: {
-          navigateFallback: "/online/index.html",
+          // ✅ en root
+          navigateFallback: "/index.html",
 
           runtimeCaching: [
-            // API catálogo
+            // Catálogo
             {
               urlPattern: ({ url, request }) =>
                 request.method === "GET" &&
@@ -63,7 +67,7 @@ export default defineConfig(({ mode }) => {
               },
             },
 
-            // Auth / pedidos → nunca cachear
+            // Auth/Pedidos (no cache)
             {
               urlPattern: ({ url }) =>
                 url.origin === BACKEND_ORIGIN &&
@@ -82,7 +86,7 @@ export default defineConfig(({ mode }) => {
               },
             },
 
-            // JS / CSS
+            // JS/CSS
             {
               urlPattern: ({ request }) =>
                 ["script", "style"].includes(request.destination),
