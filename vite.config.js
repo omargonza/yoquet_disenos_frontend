@@ -2,11 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   const BACKEND_ORIGIN = "https://yoquet-disenos-backend.onrender.com";
 
   return {
-    // ✅ Render sirve en raíz
+    // 🔒 Render sirve en raíz
     base: "/",
 
     plugins: [
@@ -14,15 +14,15 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
 
-        // ✅ no inyectar registro en index.html
+        // 🔒 nunca inyectar registro en index.html
         injectRegister: null,
 
-        // ✅ DEV sin SW
+        // 🔒 DEV sin Service Worker
         devOptions: { enabled: false },
 
         includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
 
-        // ✅ Render/root
+        // 🔒 Manifest alineado a Render
         manifest: {
           id: "/",
           name: "Yoquet Diseños — Tienda & Gestión",
@@ -48,7 +48,6 @@ export default defineConfig(({ mode }) => {
         },
 
         workbox: {
-          // ✅ en root
           navigateFallback: "/index.html",
 
           runtimeCaching: [
@@ -67,7 +66,7 @@ export default defineConfig(({ mode }) => {
               },
             },
 
-            // Auth/Pedidos (no cache)
+            // Auth / pedidos → NO cache
             {
               urlPattern: ({ url }) =>
                 url.origin === BACKEND_ORIGIN &&
@@ -86,7 +85,7 @@ export default defineConfig(({ mode }) => {
               },
             },
 
-            // JS/CSS
+            // JS / CSS
             {
               urlPattern: ({ request }) =>
                 ["script", "style"].includes(request.destination),

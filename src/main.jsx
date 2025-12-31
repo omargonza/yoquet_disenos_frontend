@@ -12,7 +12,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-// 👉 RENDER SIEMPRE USA "/"
+// 🔒 Render SIEMPRE usa raíz
 const BASENAME = "/";
 
 root.render(
@@ -33,11 +33,11 @@ root.render(
 
 /**
  * PWA / Service Worker
- * - DEV: sin SW, limpia restos
- * - PROD: registra SW
+ * DEV: sin SW, limpia restos
+ * PROD (Render): registra SW
  */
 async function setupSW() {
-  // DEV → NO Service Worker
+  // DEV → NO SW
   if (import.meta.env.DEV) {
     if ("serviceWorker" in navigator) {
       try {
