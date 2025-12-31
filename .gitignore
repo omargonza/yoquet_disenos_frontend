@@ -13,6 +13,14 @@ dist/
 build/
 .cache/
 .tmp/
+# PWA dev output
+dev-dist/
+
+# PWA artifacts (si alguna vez se generan sueltos)
+sw.js
+sw.js.map
+workbox-*.js
+workbox-*.js.map
 
 # Archivos del editor / sistema
 .DS_Store

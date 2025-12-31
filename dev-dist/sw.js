@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-49d9e701'], (function (workbox) { 'use strict';
+define(['./workbox-d741a702'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -82,23 +82,27 @@ define(['./workbox-49d9e701'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.ifgnrrchtcg"
+    "revision": "0.tqojfugt45c"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/]
   }));
   workbox.registerRoute(({
-    url
-  }) => url.pathname.startsWith("/api/"), new workbox.NetworkFirst({
-    "cacheName": "yoquet-api",
+    url,
+    request
+  }) => request.method === "GET" && url.origin.includes("yoquet-disenos-backend.onrender.com") && (url.pathname.startsWith("/api/productos/") || url.pathname.startsWith("/api/categorias/")), new workbox.NetworkFirst({
+    "cacheName": "yoquet-catalogo",
     plugins: [new workbox.CacheableResponsePlugin({
       statuses: [0, 200]
     }), new workbox.ExpirationPlugin({
-      maxEntries: 50,
+      maxEntries: 80,
       maxAgeSeconds: 3600
     })]
   }), 'GET');
+  workbox.registerRoute(({
+    url
+  }) => url.origin.includes("yoquet-disenos-backend.onrender.com") && (url.pathname.startsWith("/api/auth/") || url.pathname.startsWith("/api/pedido/")), new workbox.NetworkOnly(), 'GET');
   workbox.registerRoute(({
     request
   }) => request.destination === "image", new workbox.CacheFirst({
