@@ -6,9 +6,9 @@ import { useToast } from "../context/ToastContext";
 import SmartImage from "../components/SmartImage";
 import { optimizeImage } from "../utils/cloudinary";
 
-
-
-/* Sanitización */
+/* ================================
+   Sanitización
+================================ */
 const sanitizeText = (str) =>
   typeof str === "string"
     ? str.replace(/</g, "&lt;").replace(/>/g, "&gt;").slice(0, 200)
@@ -20,19 +20,24 @@ const sanitizeImg = (url) => {
   return url.replace(/["'<>]/g, "");
 };
 
-// ✅ Cloudinary transform (thumbs livianas)
+// (lo dejo por si lo seguís usando en otras partes)
 const cloudThumb = (url, w = 600) => {
   const clean = sanitizeImg(url);
   if (!clean.startsWith("http")) return clean;
   if (!clean.includes("/image/upload/")) return clean;
-  return clean.replace(
-    "/image/upload/",
-    `/image/upload/f_auto,q_auto,w_${w},c_fill/`
-  );
+  return clean.replace("/image/upload/", `/image/upload/f_auto,q_auto,w_${w},c_fill/`);
 };
 
 /* Cache en memoria (solo sesión) */
-const pageCache = new Map(); // key: `${page}|${catId}|${q}` -> { results, next, previous, count }
+const pageCache = new Map(); // key: `${page}|${catId}|${q}|${pageSize}` -> payload
+
+/* Cache de imágenes rotas (sesión) */
+const brokenImageIds = new Set();
+
+const getSafeImage = (url, id) => {
+  if (!url || brokenImageIds.has(id)) return "/fallback.webp";
+  return url;
+};
 
 export default function Productos() {
   const navigate = useNavigate();
@@ -41,18 +46,24 @@ export default function Productos() {
   const { agregarAlCarrito } = useCarrito();
   const { showToast } = useToast();
 
-  const [data, setData] = useState({
-    results: [],
-    next: null,
-    previous: null,
-    count: 0,
-  });
+  const [data, setData] = useState({ results: [], next: null, previous: null, count: 0 });
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(!navigator.onLine);
 
+  // pageSize dinámico
+  const [pageSize, setPageSize] = useState(() => computePageSize());
+
+  // Para invalidar requests viejas
   const reqIdRef = useRef(0);
+
+  function computePageSize() {
+    const w = window.innerWidth;
+    if (w < 640) return 12;
+    if (w < 1024) return 16;
+    return 24;
+  }
 
   // ✅ cat desde URL
   const catParamId = useMemo(() => {
@@ -90,6 +101,28 @@ export default function Productos() {
     };
   }, []);
 
+  // ✅ Resize => recalcular pageSize + reset page
+  useEffect(() => {
+    let t = null;
+
+    const onResize = () => {
+      // debounce corto
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        const next = computePageSize();
+        setPageSize((prev) => (prev === next ? prev : next));
+        setPage(1);
+        reqIdRef.current += 1; // invalida requests viejas
+      }, 200);
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      if (t) clearTimeout(t);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
   // ✅ al cambiar categoría o búsqueda, resetea page e invalida requests viejas
   useEffect(() => {
     setPage(1);
@@ -100,7 +133,7 @@ export default function Productos() {
     async (p, { prefetch = false } = {}) => {
       const catIdForFetch = catParamId || "";
       const qForFetch = qParam || "";
-      const key = `${p}|${catIdForFetch}|${qForFetch}`;
+      const key = `${p}|${catIdForFetch}|${qForFetch}|${pageSize}`;
 
       // 1) cache memoria
       if (pageCache.has(key)) {
@@ -129,7 +162,7 @@ export default function Productos() {
       try {
         const params = new URLSearchParams();
         params.set("page", String(p));
-        params.set("page_size", "24");
+        params.set("page_size", String(pageSize));
         if (qForFetch) params.set("search", qForFetch);
 
         const url = catIdForFetch
@@ -138,6 +171,7 @@ export default function Productos() {
 
         const res = await api.get(url, { timeout: 20000 });
 
+        // si llegó una respuesta vieja, la ignoramos
         if (!prefetch && myReqId !== reqIdRef.current) return null;
 
         const payload = {
@@ -147,22 +181,21 @@ export default function Productos() {
           count: Number(res.data.count || 0),
         };
 
-        // Cache memoria (rápido)
         pageCache.set(key, payload);
 
-        // ✅ Persistencia diferida (no bloquear main thread)
+        // persistencia diferida (no bloquear)
         const persist = () => {
           try {
             localStorage.setItem(lsKey, JSON.stringify(payload));
-          } catch { }
+          } catch {}
         };
+
         if (!prefetch) {
           if ("requestIdleCallback" in window) requestIdleCallback(persist, { timeout: 1500 });
           else setTimeout(persist, 800);
         }
 
         if (!prefetch) setData(payload);
-
         return payload;
       } catch {
         return null;
@@ -170,9 +203,10 @@ export default function Productos() {
         if (!prefetch) setLoading(false);
       }
     },
-    [catParamId, qParam]
+    [catParamId, qParam, pageSize]
   );
 
+  // Fetch principal + prefetch
   useEffect(() => {
     let mounted = true;
 
@@ -180,7 +214,6 @@ export default function Productos() {
       const res = await fetchPage(page);
       if (!mounted || !res) return;
 
-      // ✅ Prefetch en idle (no penaliza LCP / first paint)
       if (res.next && navigator.onLine) {
         const cb = () => fetchPage(page + 1, { prefetch: true });
         if ("requestIdleCallback" in window) requestIdleCallback(cb, { timeout: 1500 });
@@ -188,8 +221,10 @@ export default function Productos() {
       }
     })();
 
-    return () => (mounted = false);
-  }, [page, catParamId, qParam, fetchPage]);
+    return () => {
+      mounted = false;
+    };
+  }, [page, fetchPage]);
 
   const handleAdd = useCallback(
     (p) => {
@@ -203,7 +238,7 @@ export default function Productos() {
   const hasPrev = !!data.previous && page > 1;
   const hasNext = !!data.next;
 
-  const skeletonItems = useMemo(() => Array.from({ length: 12 }), []);
+  const skeletonItems = useMemo(() => Array.from({ length: pageSize }), [pageSize]);
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
@@ -248,7 +283,8 @@ export default function Productos() {
               </h2>
 
               <p className="mt-2 text-sm font-bold leading-snug" style={{ color: "var(--muted)" }}>
-                Piezas listas para regalar, decorar y sorprender. Coloridas y premium, sin perder calidez.
+                Piezas listas para regalar, decorar y sorprender. Coloridas y premium, sin perder
+                calidez.
               </p>
             </div>
 
@@ -330,124 +366,118 @@ export default function Productos() {
           </div>
         </div>
 
-        {/* Grid (no bloquea render) */}
+        {/* Grid */}
         <div
           className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
           style={{ animation: "yqFadeIn .22s ease" }}
         >
           {loading
             ? skeletonItems.map((_, i) => (
-              <div key={i} className="card-yoquet overflow-hidden">
-                <div className="skeleton h-56 w-full" />
-                <div className="p-4">
-                  <div className="skeleton h-6 w-3/4" />
-                  <div className="skeleton h-4 w-full mt-3" />
-                  <div className="skeleton h-4 w-2/3 mt-2" />
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <div className="skeleton h-7 w-24" />
-                    <div className="skeleton h-10 w-28 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            ))
-            : productos.map((p) => {
-              const isNuevo = Number(p.id) > 120;
-              const isPremium = Number(p.precio) >= 15000;
-
-              return (
-                <article
-                  key={p.id}
-                  className="card-yoquet overflow-hidden cursor-pointer relative"
-                  onClick={() => navigate(`/productos/${p.id}`)}
-                >
-                  <div className="absolute top-3 left-3 flex gap-2 z-10">
-                    {isNuevo && (
-                      <span
-                        className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                        style={{
-                          background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
-                          color: "white",
-                          border: "1px solid rgba(255,255,255,0.60)",
-                          boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-                        }}
-                      >
-                        Nuevo
-                      </span>
-                    )}
-                    {isPremium && (
-                      <span
-                        className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                        style={{
-                          background: "rgba(255,255,255,0.86)",
-                          color: "var(--text)",
-                          border: "1px solid var(--border)",
-                          boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
-                        }}
-                      >
-                        Premium
-                      </span>
-                    )}
-                  </div>
-
-                  {(() => {
-                    const imgSrc = optimizeImage(p.imagen, {
-                      w: 600,
-                      h: 448,
-                      crop: "fill",
-                    });
-
-                    const blurSrc = optimizeImage(p.imagen, {
-                      w: 40,
-                      h: 30,
-                      quality: 20,
-                    });
-
-                    // primeras 4 cards: eager (mejora LCP)
-                    const eager = page === 1 && Number(p.id) <= 4;
-
-                    return (
-                      <SmartImage
-                        src={imgSrc}
-                        blur={blurSrc}
-                        alt={sanitizeText(p.nombre)}
-                        eager={eager}
-                        className="w-full h-56"
-                      />
-                    );
-                  })()}
-
+                <div key={i} className="card-yoquet overflow-hidden">
+                  <div className="skeleton h-56 w-full" />
                   <div className="p-4">
-                    <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
-                      {sanitizeText(p.nombre)}
-                    </h3>
-
-                    <p
-                      className="text-sm mt-1 line-clamp-2"
-                      style={{ color: "var(--muted)", fontWeight: 700 }}
-                    >
-                      {sanitizeText(p.descripcion)}
-                    </p>
-
+                    <div className="skeleton h-6 w-3/4" />
+                    <div className="skeleton h-4 w-full mt-3" />
+                    <div className="skeleton h-4 w-2/3 mt-2" />
                     <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
-                        ${p.precio}
-                      </div>
-
-                      <button
-                        type="button"
-                        className="btn-yoquet"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAdd(p);
-                        }}
-                      >
-                        Agregar
-                      </button>
+                      <div className="skeleton h-7 w-24" />
+                      <div className="skeleton h-10 w-28 rounded-full" />
                     </div>
                   </div>
-                </article>
-              );
-            })}
+                </div>
+              ))
+            : productos.map((p, i) => {
+                const isNuevo = Number(p.id) > 120;
+                const isPremium = Number(p.precio) >= 15000;
+
+                const safeUrl = getSafeImage(p.imagen, p.id);
+
+                const imgSrc = optimizeImage(safeUrl, { w: 600, h: 448, crop: "fill" });
+                const blurSrc = optimizeImage(safeUrl, { w: 40, h: 30, quality: 20 });
+
+                // ✅ eager real: primeras 4 cards renderizadas de la primera página
+                const eager = page === 1 && i < 4;
+
+                return (
+                  <article
+                    key={p.id}
+                    className="card-yoquet overflow-hidden cursor-pointer relative"
+                    onClick={() => navigate(`/productos/${p.id}`)}
+                  >
+                    <div className="absolute top-3 left-3 flex gap-2 z-10">
+                      {isNuevo && (
+                        <span
+                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                          style={{
+                            background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
+                            color: "white",
+                            border: "1px solid rgba(255,255,255,0.60)",
+                            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+                          }}
+                        >
+                          Nuevo
+                        </span>
+                      )}
+                      {isPremium && (
+                        <span
+                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                          style={{
+                            background: "rgba(255,255,255,0.86)",
+                            color: "var(--text)",
+                            border: "1px solid var(--border)",
+                            boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          Premium
+                        </span>
+                      )}
+                    </div>
+
+                    <SmartImage
+                      src={imgSrc}
+                      blur={blurSrc}
+                      alt={sanitizeText(p.nombre)}
+                      eager={eager}
+                      className="w-full h-56"
+                      fallback="/fallback.webp"
+                      onError={() => brokenImageIds.add(p.id)}
+                    />
+
+                    <div className="p-4">
+                      <h3
+                        className="font-extrabold text-lg truncate"
+                        style={{ color: "var(--text)" }}
+                      >
+                        {sanitizeText(p.nombre)}
+                      </h3>
+
+                      <p
+                        className="text-sm mt-1 line-clamp-2"
+                        style={{ color: "var(--muted)", fontWeight: 700 }}
+                      >
+                        {sanitizeText(p.descripcion)}
+                      </p>
+
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                          ${p.precio}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn-yoquet"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdd(p);
+                          }}
+                        >
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
         </div>
 
         {/* Paginación */}

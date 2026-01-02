@@ -1,11 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-/**
- * SmartImage
- * - Blur placeholder (Cloudinary LQIP)
- * - Fade-in cuando la imagen real carga
- * - Optimizado para grids grandes
- */
 export default function SmartImage({
   src,
   blur,
@@ -13,23 +7,25 @@ export default function SmartImage({
   className = "",
   eager = false,
   fallback = "/fallback.webp",
+  onError,
 }) {
   const [loaded, setLoaded] = useState(false);
 
+  const safeBlur = blur || fallback;
+  const safeSrc = src || fallback;
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      {/* Blur placeholder */}
       <img
-        src={blur}
-        aria-hidden
+        src={safeBlur}
+        aria-hidden="true"
         className={`absolute inset-0 w-full h-full object-cover scale-110 transition-opacity duration-500 ${
           loaded ? "opacity-0" : "opacity-100"
         }`}
       />
 
-      {/* Imagen real */}
       <img
-        src={src}
+        src={safeSrc}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
@@ -39,6 +35,7 @@ export default function SmartImage({
           e.currentTarget.onerror = null;
           e.currentTarget.src = fallback;
           setLoaded(true);
+          onError?.();
         }}
         className={`relative z-10 w-full h-full object-cover transition-opacity duration-500 ${
           loaded ? "opacity-100" : "opacity-0"
@@ -47,3 +44,4 @@ export default function SmartImage({
     </div>
   );
 }
+
