@@ -3,6 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "../utils/api";
 import { useCarrito } from "../context/CarritoContext";
 import { useToast } from "../context/ToastContext";
+import SmartImage from "../components/SmartImage";
+import { optimizeImage } from "../utils/cloudinary";
+
+
 
 /* Sanitización */
 const sanitizeText = (str) =>
@@ -150,7 +154,7 @@ export default function Productos() {
         const persist = () => {
           try {
             localStorage.setItem(lsKey, JSON.stringify(payload));
-          } catch {}
+          } catch { }
         };
         if (!prefetch) {
           if ("requestIdleCallback" in window) requestIdleCallback(persist, { timeout: 1500 });
@@ -333,102 +337,117 @@ export default function Productos() {
         >
           {loading
             ? skeletonItems.map((_, i) => (
-                <div key={i} className="card-yoquet overflow-hidden">
-                  <div className="skeleton h-56 w-full" />
-                  <div className="p-4">
-                    <div className="skeleton h-6 w-3/4" />
-                    <div className="skeleton h-4 w-full mt-3" />
-                    <div className="skeleton h-4 w-2/3 mt-2" />
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="skeleton h-7 w-24" />
-                      <div className="skeleton h-10 w-28 rounded-full" />
-                    </div>
+              <div key={i} className="card-yoquet overflow-hidden">
+                <div className="skeleton h-56 w-full" />
+                <div className="p-4">
+                  <div className="skeleton h-6 w-3/4" />
+                  <div className="skeleton h-4 w-full mt-3" />
+                  <div className="skeleton h-4 w-2/3 mt-2" />
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="skeleton h-7 w-24" />
+                    <div className="skeleton h-10 w-28 rounded-full" />
                   </div>
                 </div>
-              ))
+              </div>
+            ))
             : productos.map((p) => {
-                const isNuevo = Number(p.id) > 120;
-                const isPremium = Number(p.precio) >= 15000;
+              const isNuevo = Number(p.id) > 120;
+              const isPremium = Number(p.precio) >= 15000;
 
-                return (
-                  <article
-                    key={p.id}
-                    className="card-yoquet overflow-hidden cursor-pointer relative"
-                    onClick={() => navigate(`/productos/${p.id}`)}
-                  >
-                    <div className="absolute top-3 left-3 flex gap-2 z-10">
-                      {isNuevo && (
-                        <span
-                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                          style={{
-                            background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
-                            color: "white",
-                            border: "1px solid rgba(255,255,255,0.60)",
-                            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-                          }}
-                        >
-                          Nuevo
-                        </span>
-                      )}
-                      {isPremium && (
-                        <span
-                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                          style={{
-                            background: "rgba(255,255,255,0.86)",
-                            color: "var(--text)",
-                            border: "1px solid var(--border)",
-                            boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
-                          }}
-                        >
-                          Premium
-                        </span>
-                      )}
-                    </div>
-
-                    <img
-                      src={cloudThumb(p.imagen, 600)}
-                      alt={sanitizeText(p.nombre)}
-                      className="w-full h-56 object-cover"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/fallback.webp";
-                      }}
-                    />
-
-                    <div className="p-4">
-                      <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
-                        {sanitizeText(p.nombre)}
-                      </h3>
-
-                      <p
-                        className="text-sm mt-1 line-clamp-2"
-                        style={{ color: "var(--muted)", fontWeight: 700 }}
+              return (
+                <article
+                  key={p.id}
+                  className="card-yoquet overflow-hidden cursor-pointer relative"
+                  onClick={() => navigate(`/productos/${p.id}`)}
+                >
+                  <div className="absolute top-3 left-3 flex gap-2 z-10">
+                    {isNuevo && (
+                      <span
+                        className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                        style={{
+                          background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
+                          color: "white",
+                          border: "1px solid rgba(255,255,255,0.60)",
+                          boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+                        }}
                       >
-                        {sanitizeText(p.descripcion)}
-                      </p>
+                        Nuevo
+                      </span>
+                    )}
+                    {isPremium && (
+                      <span
+                        className="px-2 py-1 rounded-full text-[11px] font-extrabold"
+                        style={{
+                          background: "rgba(255,255,255,0.86)",
+                          color: "var(--text)",
+                          border: "1px solid var(--border)",
+                          boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
+                        }}
+                      >
+                        Premium
+                      </span>
+                    )}
+                  </div>
 
-                      <div className="mt-4 flex items-center justify-between gap-3">
-                        <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
-                          ${p.precio}
-                        </div>
+                  {(() => {
+                    const imgSrc = optimizeImage(p.imagen, {
+                      w: 600,
+                      h: 448,
+                      crop: "fill",
+                    });
 
-                        <button
-                          type="button"
-                          className="btn-yoquet"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAdd(p);
-                          }}
-                        >
-                          Agregar
-                        </button>
+                    const blurSrc = optimizeImage(p.imagen, {
+                      w: 40,
+                      h: 30,
+                      quality: 20,
+                    });
+
+                    // primeras 4 cards: eager (mejora LCP)
+                    const eager = page === 1 && Number(p.id) <= 4;
+
+                    return (
+                      <SmartImage
+                        src={imgSrc}
+                        blur={blurSrc}
+                        alt={sanitizeText(p.nombre)}
+                        eager={eager}
+                        className="w-full h-56"
+                      />
+                    );
+                  })()}
+
+                  <div className="p-4">
+                    <h3 className="font-extrabold text-lg truncate" style={{ color: "var(--text)" }}>
+                      {sanitizeText(p.nombre)}
+                    </h3>
+
+                    <p
+                      className="text-sm mt-1 line-clamp-2"
+                      style={{ color: "var(--muted)", fontWeight: 700 }}
+                    >
+                      {sanitizeText(p.descripcion)}
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                        ${p.precio}
                       </div>
+
+                      <button
+                        type="button"
+                        className="btn-yoquet"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAdd(p);
+                        }}
+                      >
+                        Agregar
+                      </button>
                     </div>
-                  </article>
-                );
-              })}
+                  </div>
+                </article>
+              );
+            })}
         </div>
 
         {/* Paginación */}
