@@ -20,18 +20,8 @@ const sanitizeImg = (url) => {
   return url.replace(/["'<>]/g, "");
 };
 
-// (lo dejo por si lo seguís usando en otras partes)
-const cloudThumb = (url, w = 600) => {
-  const clean = sanitizeImg(url);
-  if (!clean.startsWith("http")) return clean;
-  if (!clean.includes("/image/upload/")) return clean;
-  return clean.replace("/image/upload/", `/image/upload/f_auto,q_auto,w_${w},c_fill/`);
-};
-
-/* Cache en memoria (solo sesión) */
-const pageCache = new Map(); // key: `${page}|${catId}|${q}|${pageSize}` -> payload
-
-/* Cache de imágenes rotas (sesión) */
+/* Cache en memoria */
+const pageCache = new Map();
 const brokenImageIds = new Set();
 
 const getSafeImage = (url, id) => {
@@ -39,40 +29,34 @@ const getSafeImage = (url, id) => {
   return url;
 };
 
+function computePageSize() {
+  const w = window.innerWidth;
+  if (w < 640) return 12;
+  if (w < 1024) return 16;
+  return 24;
+}
+
 export default function Productos() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { agregarAlCarrito } = useCarrito();
   const { showToast } = useToast();
 
   const [data, setData] = useState({ results: [], next: null, previous: null, count: 0 });
   const [page, setPage] = useState(1);
-
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(!navigator.onLine);
-
-  // pageSize dinámico
   const [pageSize, setPageSize] = useState(() => computePageSize());
-
-  // Para invalidar requests viejas
   const reqIdRef = useRef(0);
 
-  function computePageSize() {
-    const w = window.innerWidth;
-    if (w < 640) return 12;
-    if (w < 1024) return 16;
-    return 24;
-  }
-
-  // ✅ cat desde URL
+  // Categoría desde URL
   const catParamId = useMemo(() => {
     const sp = new URLSearchParams(location.search);
     const v = sp.get("cat");
     return v ? Number(v) : null;
   }, [location.search]);
 
-  // ✅ q desde URL
+  // Búsqueda desde URL
   const qParam = useMemo(() => {
     const sp = new URLSearchParams(location.search);
     const v = sp.get("q");
@@ -101,21 +85,18 @@ export default function Productos() {
     };
   }, []);
 
-  // ✅ Resize => recalcular pageSize + reset page
+  // Resize
   useEffect(() => {
     let t = null;
-
     const onResize = () => {
-      // debounce corto
       if (t) clearTimeout(t);
       t = setTimeout(() => {
         const next = computePageSize();
         setPageSize((prev) => (prev === next ? prev : next));
         setPage(1);
-        reqIdRef.current += 1; // invalida requests viejas
+        reqIdRef.current += 1;
       }, 200);
     };
-
     window.addEventListener("resize", onResize);
     return () => {
       if (t) clearTimeout(t);
@@ -123,7 +104,7 @@ export default function Productos() {
     };
   }, []);
 
-  // ✅ al cambiar categoría o búsqueda, resetea page e invalida requests viejas
+  // Reset al cambiar filtros
   useEffect(() => {
     setPage(1);
     reqIdRef.current += 1;
@@ -135,25 +116,10 @@ export default function Productos() {
       const qForFetch = qParam || "";
       const key = `${p}|${catIdForFetch}|${qForFetch}|${pageSize}`;
 
-      // 1) cache memoria
       if (pageCache.has(key)) {
         const cached = pageCache.get(key);
         if (!prefetch) setData(cached);
         return cached;
-      }
-
-      // 2) cache localStorage
-      const lsKey = `cache_prod_page_${key}`;
-      const cachedLS = localStorage.getItem(lsKey);
-      if (cachedLS) {
-        try {
-          const parsed = JSON.parse(cachedLS);
-          pageCache.set(key, parsed);
-          if (!prefetch) setData(parsed);
-          return parsed;
-        } catch {
-          // noop
-        }
       }
 
       const myReqId = ++reqIdRef.current;
@@ -171,7 +137,6 @@ export default function Productos() {
 
         const res = await api.get(url, { timeout: 20000 });
 
-        // si llegó una respuesta vieja, la ignoramos
         if (!prefetch && myReqId !== reqIdRef.current) return null;
 
         const payload = {
@@ -182,19 +147,6 @@ export default function Productos() {
         };
 
         pageCache.set(key, payload);
-
-        // persistencia diferida (no bloquear)
-        const persist = () => {
-          try {
-            localStorage.setItem(lsKey, JSON.stringify(payload));
-          } catch {}
-        };
-
-        if (!prefetch) {
-          if ("requestIdleCallback" in window) requestIdleCallback(persist, { timeout: 1500 });
-          else setTimeout(persist, 800);
-        }
-
         if (!prefetch) setData(payload);
         return payload;
       } catch {
@@ -206,21 +158,13 @@ export default function Productos() {
     [catParamId, qParam, pageSize]
   );
 
-  // Fetch principal + prefetch
+  // Fetch principal
   useEffect(() => {
     let mounted = true;
-
     (async () => {
       const res = await fetchPage(page);
       if (!mounted || !res) return;
-
-      if (res.next && navigator.onLine) {
-        const cb = () => fetchPage(page + 1, { prefetch: true });
-        if ("requestIdleCallback" in window) requestIdleCallback(cb, { timeout: 1500 });
-        else setTimeout(cb, 900);
-      }
     })();
-
     return () => {
       mounted = false;
     };
@@ -237,235 +181,151 @@ export default function Productos() {
   const productos = useMemo(() => data.results, [data.results]);
   const hasPrev = !!data.previous && page > 1;
   const hasNext = !!data.next;
-
   const skeletonItems = useMemo(() => Array.from({ length: pageSize }), [pageSize]);
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
       {offline && (
         <div
-          className="text-center py-2 text-sm font-extrabold"
+          className="text-center py-2 text-sm font-medium"
           style={{
-            background: "rgba(255,216,90,0.35)",
-            color: "var(--text)",
-            borderBottom: "1px solid var(--border)",
+            background: "var(--surface-soft)",
+            color: "var(--text-secondary)",
+            borderBottom: "1px solid var(--border-soft)",
           }}
         >
-          Modo offline — Catálogo cargado desde caché
+          Modo offline — Catálogo desde caché
         </div>
       )}
 
-      <section className="container-yoquet pt-6 pb-12">
-        {/* Micro-hero */}
+      <section className="container-yoquet pt-6 pb-10">
+        {/* Micro-hero limpio */}
         <div
-          className="rounded-3xl p-4"
+          className="rounded-xl p-5"
           style={{
-            border: "1px solid var(--border)",
-            background:
-              "radial-gradient(520px 240px at 20% 0%, rgba(255,102,179,0.18), transparent 55%)," +
-              "radial-gradient(460px 220px at 80% 10%, rgba(66,226,184,0.18), transparent 55%)," +
-              "radial-gradient(420px 220px at 40% 100%, rgba(255,216,90,0.16), transparent 60%)," +
-              "rgba(255,255,255,0.66)",
-            backdropFilter: "blur(6px) saturate(140%)",
+            background: "var(--surface)",
+            border: "1px solid var(--border-soft)",
           }}
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div>
               <div
-                className="text-[11px] font-extrabold tracking-wide uppercase"
-                style={{ color: "var(--muted)" }}
+                className="text-xs font-medium uppercase tracking-wide"
+                style={{ color: "var(--text-secondary)" }}
               >
-                Yoquet Diseños · artesanal & festivo
+                Yoquet Diseños
               </div>
-
-              <h2 className="mt-1 text-xl font-extrabold" style={{ color: "var(--text)" }}>
-                Catálogo para celebrar con estilo
-              </h2>
-
-              <p className="mt-2 text-sm font-bold leading-snug" style={{ color: "var(--muted)" }}>
-                Piezas listas para regalar, decorar y sorprender. Coloridas y premium, sin perder
-                calidez.
+              <h1 className="text-xl sm:text-2xl font-semibold mt-1" style={{ color: "var(--text-primary)" }}>
+                Catálogo de productos
+              </h1>
+              <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+                {data.count} productos disponibles
               </p>
             </div>
 
-            <div className="shrink-0">
-              <div
-                className="rounded-2xl px-3 py-2 text-xs font-extrabold"
-                style={{
-                  background: "rgba(255,255,255,0.75)",
-                  border: "1px solid var(--border)",
-                  color: "var(--text)",
-                }}
-                title="Cantidad total de productos (según backend)"
-              >
-                {data.count} items
-              </div>
+            {/* Filtros rápidos */}
+            <div className="flex flex-wrap gap-2">
+              {catParamId ? (
+                <>
+                  <span className="chip is-active">Filtrando</span>
+                  <button
+                    type="button"
+                    className="chip"
+                    onClick={() => {
+                      const sp = new URLSearchParams(location.search);
+                      sp.delete("cat");
+                      navigate(`/productos?${sp.toString()}`);
+                    }}
+                  >
+                    Ver todo
+                  </button>
+                </>
+              ) : (
+                <>
+                  {qParam && (
+                    <span className="chip is-active">Buscando: {sanitizeText(qParam)}</span>
+                  )}
+                  {qParam && (
+                    <button
+                      type="button"
+                      className="chip"
+                      onClick={() => setQueryParam("q", null)}
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {catParamId ? (
-              <>
-                <span className="chip is-active">Filtrando</span>
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => {
-                    const sp = new URLSearchParams(location.search);
-                    sp.delete("cat");
-                    navigate(`/productos?${sp.toString()}`);
-                  }}
-                  title="Quitar filtro de categoría"
-                >
-                  Ver todo
-                </button>
-              </>
-            ) : (
-              <span className="chip is-active">Explorá por categorías arriba</span>
-            )}
-
-            {qParam ? (
-              <span
-                className="chip"
-                title="Búsqueda activa"
-                style={{
-                  background: "rgba(255,255,255,0.80)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                Buscando: {sanitizeText(qParam)}
-              </span>
-            ) : null}
-
-            {qParam ? (
+          {/* Categorías */}
+          <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+            {["Cumpleaños", "Souvenirs", "Navidad", "Deco"].map((t) => (
               <button
+                key={t}
                 type="button"
                 className="chip"
-                onClick={() => setQueryParam("q", null)}
-                title="Limpiar búsqueda"
+                onClick={() => setQueryParam("q", t)}
               >
-                Limpiar
+                {t}
               </button>
-            ) : null}
-
-            <div className="flex-1" />
-
-            <div className="flex gap-2 overflow-x-auto scrollbar-none">
-              {["Cumples", "Souvenirs", "Navidad", "Deco"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className="chip"
-                  onClick={() => setQueryParam("q", t)}
-                  title={`Buscar: ${t}`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Grid */}
-        <div
-          className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-          style={{ animation: "yqFadeIn .22s ease" }}
-        >
+        {/* Grid de productos */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {loading
             ? skeletonItems.map((_, i) => (
-                <div key={i} className="card-yoquet overflow-hidden">
-                  <div className="skeleton h-56 w-full" />
-                  <div className="p-4">
-                    <div className="skeleton h-6 w-3/4" />
-                    <div className="skeleton h-4 w-full mt-3" />
-                    <div className="skeleton h-4 w-2/3 mt-2" />
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="skeleton h-7 w-24" />
-                      <div className="skeleton h-10 w-28 rounded-full" />
-                    </div>
+                <div key={i} className="card-yoquet">
+                  <div className="skeleton h-36 sm:h-44 w-full rounded-lg" />
+                  <div className="p-3 space-y-2">
+                    <div className="skeleton h-4 w-3/4" />
+                    <div className="skeleton h-3 w-1/2" />
                   </div>
                 </div>
               ))
             : productos.map((p, i) => {
                 const isNuevo = Number(p.id) > 120;
                 const isPremium = Number(p.precio) >= 15000;
-
                 const safeUrl = getSafeImage(p.imagen, p.id);
-
-                const imgSrc = optimizeImage(safeUrl, { w: 600, h: 448, crop: "fill" });
+                const imgSrc = optimizeImage(safeUrl, { w: 400, h: 300, crop: "fill" });
                 const blurSrc = optimizeImage(safeUrl, { w: 40, h: 30, quality: 20 });
-
-                // ✅ eager real: primeras 4 cards renderizadas de la primera página
                 const eager = page === 1 && i < 4;
 
                 return (
                   <article
                     key={p.id}
-                    className="card-yoquet overflow-hidden cursor-pointer relative"
+                    className="card-yoquet flex flex-col group"
                     onClick={() => navigate(`/productos/${p.id}`)}
                   >
-                    <div className="absolute top-3 left-3 flex gap-2 z-10">
-                      {isNuevo && (
-                        <span
-                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                          style={{
-                            background: "linear-gradient(135deg, var(--color-rosa), #ff1d8e)",
-                            color: "white",
-                            border: "1px solid rgba(255,255,255,0.60)",
-                            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-                          }}
-                        >
-                          Nuevo
-                        </span>
-                      )}
-                      {isPremium && (
-                        <span
-                          className="px-2 py-1 rounded-full text-[11px] font-extrabold"
-                          style={{
-                            background: "rgba(255,255,255,0.86)",
-                            color: "var(--text)",
-                            border: "1px solid var(--border)",
-                            boxShadow: "0 10px 28px rgba(0,0,0,0.08)",
-                          }}
-                        >
-                          Premium
-                        </span>
-                      )}
+                    {/* Imagen -主角 */}
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-t-xl">
+                      <SmartImage
+                        src={imgSrc}
+                        blur={blurSrc}
+                        alt={sanitizeText(p.nombre)}
+                        eager={eager}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fallback="/fallback.webp"
+                        onError={() => brokenImageIds.add(p.id)}
+                      />
                     </div>
 
-                    <SmartImage
-                      src={imgSrc}
-                      blur={blurSrc}
-                      alt={sanitizeText(p.nombre)}
-                      eager={eager}
-                      className="w-full h-56"
-                      fallback="/fallback.webp"
-                      onError={() => brokenImageIds.add(p.id)}
-                    />
-
-                    <div className="p-4">
-                      <h3
-                        className="font-extrabold text-lg truncate"
-                        style={{ color: "var(--text)" }}
-                      >
+                    {/* Contenido - limpio */}
+                    <div className="p-4 flex flex-col flex-1">
+                      <h3 className="text-sm font-medium leading-tight line-clamp-2" style={{ color: "var(--text-primary)" }}>
                         {sanitizeText(p.nombre)}
                       </h3>
-
-                      <p
-                        className="text-sm mt-1 line-clamp-2"
-                        style={{ color: "var(--muted)", fontWeight: 700 }}
-                      >
-                        {sanitizeText(p.descripcion)}
-                      </p>
-
-                      <div className="mt-4 flex items-center justify-between gap-3">
-                        <div className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                      
+                      <div className="mt-auto pt-4 flex items-center justify-between gap-3">
+                        <span className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
                           ${p.precio}
-                        </div>
-
+                        </span>
                         <button
                           type="button"
-                          className="btn-yoquet"
+                          className="btn-yoquet text-xs py-1.5 px-3"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAdd(p);
@@ -481,39 +341,32 @@ export default function Productos() {
         </div>
 
         {/* Paginación */}
-        <div className="mt-10 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            className="btn-yoquet-ghost"
-            disabled={!hasPrev}
-            onClick={() => hasPrev && setPage((x) => Math.max(1, x - 1))}
-            style={!hasPrev ? { opacity: 0.55, pointerEvents: "none" } : undefined}
-          >
-            Anterior
-          </button>
-
-          <div className="text-sm font-extrabold" style={{ color: "var(--muted)" }}>
-            Página {page}
+        {data.count > 0 && (
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              className="btn-yoquet-ghost text-sm"
+              disabled={!hasPrev}
+              onClick={() => hasPrev && setPage((x) => Math.max(1, x - 1))}
+              style={!hasPrev ? { opacity: 0.4, pointerEvents: "none" } : undefined}
+            >
+              Anterior
+            </button>
+            <span className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+              Página {page}
+            </span>
+            <button
+              type="button"
+              className="btn-yoquet-ghost text-sm"
+              disabled={!hasNext}
+              onClick={() => hasNext && setPage((x) => x + 1)}
+              style={!hasNext ? { opacity: 0.4, pointerEvents: "none" } : undefined}
+            >
+              Siguiente
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="btn-yoquet-ghost"
-            disabled={!hasNext}
-            onClick={() => hasNext && setPage((x) => x + 1)}
-            style={!hasNext ? { opacity: 0.55, pointerEvents: "none" } : undefined}
-          >
-            Siguiente
-          </button>
-        </div>
+        )}
       </section>
-
-      <style>{`
-        @keyframes yqFadeIn {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </main>
   );
 }

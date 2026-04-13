@@ -28,15 +28,15 @@ export default function Carrito() {
     return (
       <main className="min-h-[calc(100vh-72px)]">
         <section className="container-yoquet pt-10 pb-14">
-          <div className="card-yoquet p-8 text-center max-w-xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
+          <div className="card-yoquet p-8 sm:p-10 text-center max-w-md mx-auto">
+            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
               Tu carrito está vacío
             </h1>
-            <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
-              Sumá productos y volvé acá para finalizar la compra.
+            <p className="mt-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Agregá productos para continuar con tu compra.
             </p>
 
-            <div className="mt-6 flex justify-center">
+            <div className="mt-8">
               <button className="btn-yoquet" onClick={() => navigate("/productos")}>
                 Ver catálogo
               </button>
@@ -49,135 +49,135 @@ export default function Carrito() {
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
-      <section className="container-yoquet pt-8 pb-14">
-        <div className="flex items-end justify-between gap-4 flex-wrap">
+      <section className="container-yoquet pt-6 pb-12">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
-              <span
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
-                  WebkitBackgroundClip: "text",
-                  color: "transparent",
-                }}
-              >
-                Tu carrito
-              </span>
+            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              Tu carrito
             </h1>
-            <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
-              Artículos: {totalItems}
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+              {totalItems} {totalItems === 1 ? 'artículo' : 'artículos'}
             </p>
           </div>
 
-          <button className="btn-yoquet-ghost" onClick={vaciarCarrito}>
+          <button 
+            className="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-red-50" 
+            style={{ color: "#dc2626" }}
+            onClick={vaciarCarrito}
+          >
             Vaciar
           </button>
         </div>
 
-        <div className="mt-7 card-yoquet p-4 sm:p-6 overflow-hidden">
-          {/* Header tabla */}
-          <div className="hidden md:grid grid-cols-6 text-xs font-extrabold pb-3" style={{ color: "var(--muted)" }}>
-            <div className="col-span-3">Producto</div>
-            <div className="text-center">Cant.</div>
-            <div className="text-center">Precio</div>
-            <div className="text-right">Subtotal</div>
-          </div>
+        {/* Lista de items */}
+        <div className="card-yoquet overflow-hidden divide-y" style={{ borderColor: "var(--border-soft)" }}>
+          {carrito.map((item) => (
+            <div key={item.id} className="p-4 flex gap-4">
+              {/* Imagen */}
+              <button
+                onClick={() => navigate(`/productos/${item.id}`)}
+                className="shrink-0"
+              >
+                <img
+                  src={sanitizeImg(item.imagen)}
+                  alt={sanitizeText(item.nombre)}
+                  className="w-20 h-20 rounded-lg object-cover"
+                  loading="lazy"
+                  onError={(e) => (e.currentTarget.src = "/fallback.webp")}
+                />
+              </button>
 
-          {/* Items */}
-          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-            {carrito.map((item) => (
-              <div key={item.id} className="py-4 grid grid-cols-1 md:grid-cols-6 items-center gap-4">
-                {/* Producto */}
-                <div className="md:col-span-3 flex items-center gap-4">
-                  <img
-                    src={sanitizeImg(item.imagen)}
-                    alt={sanitizeText(item.nombre)}
-                    className="w-16 h-16 rounded-2xl object-cover"
-                    style={{ border: "1px solid var(--border)" }}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => (e.currentTarget.src = "/fallback.webp")}
-                  />
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <button
+                  onClick={() => navigate(`/productos/${item.id}`)}
+                  className="text-left"
+                >
+                  <div className="font-medium text-sm truncate" style={{ color: "var(--text-primary)" }}>
+                    {sanitizeText(item.nombre)}
+                  </div>
+                </button>
 
-                  <div className="min-w-0">
-                    <div className="font-extrabold truncate" style={{ color: "var(--text)" }}>
-                      {sanitizeText(item.nombre)}
-                    </div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  {/* Controles de cantidad */}
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => quitarProducto(item.id)}
-                      className="text-xs font-extrabold mt-1"
-                      style={{ color: "rgba(255, 102, 179, 0.95)" }}
+                      onClick={() => eliminarDelCarrito(item.id)}
+                      className="w-7 h-7 rounded-md flex items-center justify-center text-sm font-medium"
+                      style={{ 
+                        background: "var(--surface)", 
+                        border: "1px solid var(--border-soft)",
+                        color: "var(--text-secondary)"
+                      }}
                     >
-                      Eliminar
+                      −
+                    </button>
+
+                    <span className="font-medium text-sm w-6 text-center" style={{ color: "var(--text-primary)" }}>
+                      {item.cantidad}
+                    </span>
+
+                    <button
+                      onClick={() => agregarAlCarrito(item)}
+                      className="w-7 h-7 rounded-md flex items-center justify-center text-sm font-medium"
+                      style={{ 
+                        background: "var(--surface)", 
+                        border: "1px solid var(--border-soft)",
+                        color: "var(--text-secondary)"
+                      }}
+                    >
+                      +
                     </button>
                   </div>
-                </div>
 
-                {/* Cantidad */}
-                <div className="flex items-center justify-start md:justify-center gap-2">
-                  <button
-                    onClick={() => eliminarDelCarrito(item.id)}
-                    className="chip"
-                    aria-label="Quitar uno"
-                  >
-                    −
-                  </button>
-
-                  <span className="font-extrabold" style={{ color: "var(--text)" }}>
-                    {item.cantidad}
-                  </span>
-
-                  <button
-                    onClick={() => agregarAlCarrito(item)}
-                    className="chip"
-                    aria-label="Agregar uno"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Precio */}
-                <div className="text-left md:text-center font-extrabold" style={{ color: "var(--text)" }}>
-                  ${item.precio}
-                </div>
-
-                {/* Subtotal */}
-                <div className="text-left md:text-right font-extrabold" style={{ color: "var(--text)" }}>
-                  ${(item.precio * item.cantidad).toFixed(2)}
+                  {/* Precio */}
+                  <div className="text-right">
+                    <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                      ${(item.precio * item.cantidad).toFixed(2)}
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Totales */}
-          <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
-            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
-              Seguir comprando
-            </button>
-
-            <div className="text-right">
-              <div className="text-sm font-extrabold" style={{ color: "var(--muted)" }}>
-                Total
-              </div>
-              <div className="text-3xl font-extrabold" style={{ color: "var(--text)" }}>
-                ${totalPrecio.toFixed(2)}
-              </div>
+              {/* Eliminar */}
+              <button
+                onClick={() => quitarProducto(item.id)}
+                className="shrink-0 self-start text-xs font-medium"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                ✕
+              </button>
             </div>
+          ))}
+        </div>
+
+        {/* Total y acciones */}
+        <div className="mt-6 space-y-4">
+          {/* Total */}
+          <div className="flex items-center justify-between">
+            <span className="text-base" style={{ color: "var(--text-secondary)" }}>
+              Total
+            </span>
+            <span className="text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              ${totalPrecio.toFixed(2)}
+            </span>
           </div>
 
-          {/* CTA */}
-          <div className="mt-7 flex justify-center gap-3 flex-wrap">
-            <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
-              Volver al catálogo
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+              className="btn-yoquet-ghost flex-1 justify-center" 
+              onClick={() => navigate("/productos")}
+            >
+              Agregar más
             </button>
-
-            <button
-              className={online ? "btn-yoquet" : "btn-yoquet-ghost"}
+            <button 
+              className="btn-yoquet flex-1 justify-center" 
               disabled={!online}
               onClick={() => online && navigate("/checkout")}
-              title={!online ? "Necesitás conexión para finalizar" : "Finalizar compra"}
             >
-              {online ? "Finalizar compra" : "Sin conexión"}
+              {online ? "Continuar" : "Sin conexión"}
             </button>
           </div>
         </div>

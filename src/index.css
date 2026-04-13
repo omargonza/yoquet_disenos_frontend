@@ -1,5 +1,5 @@
-/* === Fuentes (mantengo, pero ideal luego mover a index.html con preconnect/preload) === */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+/* === Fuentes === */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
 
 /* === Tailwind === */
 @import "tailwindcss";
@@ -8,49 +8,75 @@
 @tailwind utilities;
 
 /* ======================================================================= */
-/* === 🎨 Yoquet — Tema CLARO (fijo) + tokens === */
+/* === 🎨 Yoquet — Sistema Visual Premium === */
 /* ======================================================================= */
 :root {
-  --color-rosa: #ff66b3;
-  --color-dorado: #ffd85a;
-  --color-turquesa: #42e2b8;
-  --color-violeta: #8b5cf6;
+  --bg-main: #F6F1F2;
+  --surface: #FFFFFF;
+  --surface-soft: #F0EBEF;
 
-  --color-crema: #fffaf6;
-  --color-chocolate: #3d2b1f;
+  --text-primary: #2D2430;
+  --text-secondary: #6E5E66;
 
-  --text: #2b1f17;
-  --muted: rgba(61, 43, 31, 0.68);
-  --border: rgba(61, 43, 31, 0.10);
-  --surface: #ffffff;
+  --border-soft: #E5DBE2;
+  --border-subtle: rgba(229, 219, 226, 0.5);
 
-  --radius: 18px;
+  --color-rosa: #E85D93;
+  --color-rosa-light: #FCE8F0;
+  --color-coral: #FF8A7A;
+  --color-dorado: #F3C86A;
+  --color-ciruela: #7A466A;
+
+  --shadow-sm: 0 2px 8px rgba(45, 36, 48, 0.06);
+  --shadow-md: 0 4px 16px rgba(45, 36, 48, 0.08);
+  --shadow-lg: 0 8px 32px rgba(45, 36, 48, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
-/* Base */
-html, body { height: 100%; }
+/* === Base === */
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  font-family: "Poppins", sans-serif;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255,102,179,0.10) 0%, transparent 55%),
-    radial-gradient(circle at 82% 22%, rgba(255,216,90,0.10) 0%, transparent 55%),
-    radial-gradient(circle at 55% 90%, rgba(66,226,184,0.10) 0%, transparent 60%),
-    var(--color-crema);
-  color: var(--text);
+  font-family: "Manrope", sans-serif;
+  background-color: #F6F1F2;
+  background-image:
+    radial-gradient(
+      ellipse 60% 45% at 50% 22%,
+      rgba(255, 255, 255, 0.52) 0%,
+      rgba(255, 255, 255, 0.28) 28%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(132deg, rgba(122, 70, 106, 0.05) 0%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(218deg, rgba(100, 70, 95, 0.045) 0%, rgba(255, 255, 255, 0) 29%),
+    radial-gradient(
+      ellipse 90% 70% at 50% 100%,
+      rgba(55, 42, 52, 0.06) 0%,
+      rgba(55, 42, 52, 0) 58%
+    );
+  color: #2D2430;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Títulos de marca */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: "Playfair Display", serif;
-  font-weight: 700;
-  letter-spacing: -0.4px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* ======================================================================= */
-/* === Componentes utilitarios livianos === */
-/* ======================================================================= */
+/* === Container === */
 .container-yoquet {
   width: 100%;
   max-width: 1160px;
@@ -59,107 +85,423 @@ h1, h2, h3, h4 {
   padding-right: 16px;
 }
 
+/* === Card de producto === */
 .card-yoquet {
-  background: rgba(255,255,255,0.92);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 10px 28px rgba(61,43,31,0.08);
+  background: #FFFFFF;
+  border: 1px solid #E5DBE2;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(45, 36, 48, 0.05);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
+.card-yoquet:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(45, 36, 48, 0.1);
+  border-color: #FCE8F0;
+}
+
+/* === Botón primario === */
 .btn-yoquet {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
-  padding: .78rem 1.1rem;
-  border-radius: 9999px;
-  font-weight: 700;
-  color: #1b140f;
-  background: linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa));
-  border: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 10px 22px rgba(255,102,179,0.16);
-  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: #FFFFFF;
+  background: #E85D93;
+  border: none;
+  box-shadow: 0 2px 10px rgba(232, 93, 147, 0.25);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
-.btn-yoquet:hover { transform: translateY(-1px); box-shadow: 0 14px 26px rgba(255,102,179,0.20); }
-.btn-yoquet:active { transform: translateY(0px) scale(0.99); }
 
+.btn-yoquet:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(232, 93, 147, 0.35);
+}
+
+.btn-yoquet:active {
+  transform: translateY(0);
+}
+
+.btn-yoquet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === Botón secundario === */
 .btn-yoquet-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .45rem;
-  padding: .72rem 1rem;
-  border-radius: 9999px;
-  font-weight: 700;
-  color: var(--text);
-  background: rgba(255,255,255,0.72);
-  border: 1px solid var(--border);
-  transition: transform .15s ease, box-shadow .15s ease;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #2D2430;
+  background: #FFFFFF;
+  border: 1px solid #E5DBE2;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
-.btn-yoquet-ghost:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(61,43,31,0.10); }
-.btn-yoquet-ghost:active { transform: scale(0.99); }
 
-/* Chips (filtros) */
+.btn-yoquet-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(45, 36, 48, 0.06);
+  background: #F0EBEF;
+}
+
+.btn-yoquet-ghost:active {
+  transform: scale(0.98);
+}
+
+/* === Chips === */
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: .52rem .9rem;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.78);
-  color: var(--text);
-  font-weight: 700;
-  font-size: .88rem;
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid #E5DBE2;
+  background: #FFFFFF;
+  color: #6E5E66;
+  font-weight: 500;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
 }
-.chip:hover { transform: translateY(-1px); }
+
+.chip:hover {
+  border-color: #E85D93;
+  color: #E85D93;
+}
+
 .chip.is-active {
-  background: linear-gradient(90deg, rgba(255,102,179,0.22), rgba(255,216,90,0.22), rgba(66,226,184,0.22));
-  border-color: rgba(61,43,31,0.12);
+  background: #FCE8F0;
+  border-color: #E85D93;
+  color: #E85D93;
 }
 
-/* Skeleton (percibido rápido) */
+/* === Skeleton === */
 @keyframes shimmer {
-  0% { background-position: 0% 0; }
-  100% { background-position: 180% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
+
 .skeleton {
-  background: linear-gradient(90deg, rgba(61,43,31,0.06), rgba(61,43,31,0.10), rgba(61,43,31,0.06));
-  background-size: 180% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, #F5F0F3 25%, #EBD9E2 50%, #F5F0F3 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* === Scroll === */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* === Badge === */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-nuevo {
+  background: var(--color-rosa-light);
+  color: var(--color-rosa);
+}
+
+.badge-premium {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-soft);
+}
+
+/* === Mobile Menu === */
+@keyframes menuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menuItemFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-mobile-panel {
+  position: relative;
+  z-index: 950;
+  animation: menuSlideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.menu-item {
+  opacity: 0;
+  animation: menuItemFade 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.menu-item:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.menu-item:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.menu-item:nth-child(3) {
+  animation-delay: 0.09s;
+}
+
+.menu-item:nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+.menu-mobile-sheet {
+  background: linear-gradient(180deg, rgba(248, 241, 244, 0.96) 0%, rgba(242, 233, 238, 0.98) 100%);
+  border: 1px solid rgba(214, 191, 204, 0.55);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow:
+    0 18px 40px rgba(70, 52, 66, 0.14),
+    0 6px 18px rgba(70, 52, 66, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.menu-mobile-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 14px;
   border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(222, 205, 214, 0.7);
+  box-shadow: inset 0 1px 2px rgba(45, 36, 48, 0.04);
+}
+.menu-mobile-search-icon {
+  color: #7C6976;
+  flex-shrink: 0;
 }
 
-/* Scroll oculto */
-.scrollbar-none::-webkit-scrollbar { display: none; }
-.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Accesibilidad: menos movimiento */
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+.menu-mobile-search-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #3B2E38;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-/* === Productos: micro-hero + animaciones livianas === */
-.yq-hero {
-  border: 1px solid var(--border);
-  background:
-    radial-gradient(600px 260px at 20% 0%, rgba(255,102,179,0.20), transparent 55%),
-    radial-gradient(520px 240px at 80% 10%, rgba(66,226,184,0.20), transparent 55%),
-    radial-gradient(420px 220px at 40% 100%, rgba(255,216,90,0.18), transparent 60%),
-    rgba(255,255,255,0.68);
-  backdrop-filter: blur(6px) saturate(140%);
+.menu-mobile-search-input::placeholder {
+  color: #8D7A86;
+}
+
+.menu-mobile-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+
+.menu-mobile-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(222, 205, 214, 0.55);
+  color: #3B2E38;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.menu-mobile-link:hover,
+.menu-mobile-link:active {
+  background: rgba(232, 93, 147, 0.08);
+  border-color: rgba(232, 93, 147, 0.18);
+  transform: translateY(-1px);
+}
+
+.menu-mobile-link-muted {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.menu-mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #E85D93;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 6px 14px rgba(232, 93, 147, 0.32);
+}
+.menu-mobile-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(214, 191, 204, 0.45);
+}
+
+.menu-mobile-section-label {
+  margin-bottom: 10px;
+  color: #7A6673;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.menu-mobile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.menu-mobile-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(214, 191, 204, 0.55);
+  color: #6F5B68;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.menu-mobile-chip:hover,
+.menu-mobile-chip:active {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(232, 93, 147, 0.18);
+  transform: translateY(-1px);
+}
+
+.menu-mobile-chip.is-active {
+  background: #E85D93;
+  border-color: #E85D93;
+  color: #FFFFFF;
+}
+
+/* === Input === */
+.input-yoquet {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: "Manrope", sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-yoquet:focus {
+  border-color: var(--color-rosa);
+  box-shadow: 0 0 0 3px rgba(232, 93, 147, 0.1);
+}
+
+.input-yoquet::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* === Footer === */
+.footer-yoquet {
+  background: var(--surface);
+  border-top: 1px solid var(--border-soft);
+  padding: 1.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* === Animations === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .yq-fade-in {
-  animation: yqFadeIn .22s ease;
+  animation: fadeIn 0.3s ease forwards;
 }
 
-@keyframes yqFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 
-.yq-badge {
-  border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  .menu-mobile-panel,
+  .menu-item {
+    animation: none;
+    opacity: 1;
+  }
+
+  .menu-mobile-link,
+  .menu-mobile-chip {
+    transition: none;
+  }
 }

@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CarritoContext = createContext();
 
 export function CarritoProvider({ children }) {
   const [carrito, setCarrito] = useState([]);
+  const [justAdded, setJustAdded] = useState(false);
 
-  // 🔄 Cargar carrito desde localStorage
   useEffect(() => {
     const guardado = localStorage.getItem("carrito");
     if (guardado) {
@@ -18,12 +19,10 @@ export function CarritoProvider({ children }) {
     }
   }, []);
 
-  // 💾 Guardar carrito automáticamente
   useEffect(() => {
     localStorage.setItem("carrito", JSON.stringify(carrito));
   }, [carrito]);
 
-  // ➕ Agregar al carrito
   const agregarAlCarrito = (producto) => {
     setCarrito((prev) => {
       const existe = prev.find((p) => p.id === producto.id);
@@ -36,9 +35,11 @@ export function CarritoProvider({ children }) {
       }
       return [...prev, { ...producto, cantidad: 1 }];
     });
+    
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 500);
   };
 
-  // ➖ Eliminar 1 unidad o producto completo
   const eliminarDelCarrito = (id) => {
     setCarrito((prev) =>
       prev
@@ -49,15 +50,12 @@ export function CarritoProvider({ children }) {
     );
   };
 
-  // 🗑️ Eliminar producto completo
   const quitarProducto = (id) => {
     setCarrito((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // 🚮 Vaciar todo
   const vaciarCarrito = () => setCarrito([]);
 
-  // 🧮 Totales
   const totalItems = carrito.reduce((acc, p) => acc + p.cantidad, 0);
   const totalPrecio = carrito.reduce(
     (acc, p) => acc + p.cantidad * p.precio,
@@ -74,6 +72,7 @@ export function CarritoProvider({ children }) {
         vaciarCarrito,
         totalItems,
         totalPrecio,
+        justAdded,
       }}
     >
       {children}

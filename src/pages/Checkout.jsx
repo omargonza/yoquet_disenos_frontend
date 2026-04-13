@@ -20,7 +20,7 @@ export default function Checkout() {
     nombre: "",
     email: "",
     direccion: "",
-    metodoPago: "tarjeta",
+    metodoPago: "transferencia",
   });
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Checkout() {
 
     if (!validateName(formData.nombre)) return showToast("Nombre inválido", "error");
     if (!validateEmail(formData.email)) return showToast("Email inválido", "error");
-    if (!validateAddress(formData.direccion)) return showToast("Dirección demasiado corta", "error");
+    if (!validateAddress(formData.direccion)) return showToast("Dirección muy corta", "error");
 
     setProcessing(true);
 
@@ -53,50 +53,40 @@ export default function Checkout() {
         { timeout: 25000 }
       );
 
-      showToast("Compra realizada con éxito", "success");
+      showToast("Pedido creado", "success");
       vaciarCarrito();
       navigate("/empaquetando");
     } catch (err) {
       console.error(err);
-      showToast("No se pudo procesar el pedido", "error");
+      showToast("Error al procesar pedido", "error");
       setProcessing(false);
     }
   };
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
-      <section className="container-yoquet pt-8 pb-14">
-        <div className="flex items-center justify-between gap-3">
-          <button className="btn-yoquet-ghost" onClick={() => navigate("/carrito")}>
-            ← Volver al carrito
-          </button>
-          <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
-            Seguir comprando
-          </button>
-        </div>
+      <section className="container-yoquet pt-6 pb-12">
+        {/* Volver */}
+        <button 
+          className="btn-yoquet-ghost mb-4 text-sm" 
+          onClick={() => navigate("/carrito")}
+        >
+          ← Volver
+        </button>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* FORM */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Formulario */}
           <div className="lg:col-span-2 card-yoquet p-5 sm:p-7">
-            <h1 className="text-3xl sm:text-4xl text-center">
-              <span
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
-                  WebkitBackgroundClip: "text",
-                  color: "transparent",
-                }}
-              >
-                Finalizá tu compra
-              </span>
+            <h1 className="text-xl sm:text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>
+              Completá tus datos
             </h1>
-            <p className="mt-2 text-center text-sm" style={{ color: "var(--muted)", fontWeight: 700 }}>
-              Completá tus datos y confirmá. Es rápido.
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Para finalizar tu compra
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
-                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
                   Nombre completo
                 </label>
                 <input
@@ -104,18 +94,14 @@ export default function Checkout() {
                   value={formData.nombre}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-2xl outline-none"
-                  style={{
-                    background: "rgba(255,255,255,0.82)",
-                    border: "1px solid rgba(61,43,31,0.12)",
-                    color: "var(--text)",
-                  }}
+                  className="input-yoquet"
+                  placeholder="Tu nombre"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
-                  Correo electrónico
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
+                  Email
                 </label>
                 <input
                   type="email"
@@ -123,18 +109,14 @@ export default function Checkout() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-2xl outline-none"
-                  style={{
-                    background: "rgba(255,255,255,0.82)",
-                    border: "1px solid rgba(61,43,31,0.12)",
-                    color: "var(--text)",
-                  }}
+                  className="input-yoquet"
+                  placeholder="tu@email.com"
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
-                  Dirección
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
+                  Dirección de entrega
                 </label>
                 <input
                   type="text"
@@ -142,96 +124,66 @@ export default function Checkout() {
                   value={formData.direccion}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-2xl outline-none"
-                  style={{
-                    background: "rgba(255,255,255,0.82)",
-                    border: "1px solid rgba(61,43,31,0.12)",
-                    color: "var(--text)",
-                  }}
+                  className="input-yoquet"
+                  placeholder="Dirección"
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-extrabold mb-1" style={{ color: "var(--text)" }}>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>
                   Método de pago
                 </label>
                 <select
                   name="metodoPago"
                   value={formData.metodoPago}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-2xl outline-none"
-                  style={{
-                    background: "rgba(255,255,255,0.82)",
-                    border: "1px solid rgba(61,43,31,0.12)",
-                    color: "var(--text)",
-                  }}
+                  className="input-yoquet"
                 >
-                  <option value="tarjeta">Tarjeta 💳</option>
-                  <option value="transferencia">Transferencia 🏦</option>
-                  <option value="efectivo">Efectivo 💵</option>
+                  <option value="transferencia">Transferencia bancaria</option>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="tarjeta">Tarjeta</option>
                 </select>
               </div>
 
               <button
                 type="submit"
                 disabled={processing}
-                className="btn-yoquet md:col-span-2"
-                style={{
-                  paddingTop: "1rem",
-                  paddingBottom: "1rem",
-                  opacity: processing ? 0.75 : 1,
-                  pointerEvents: processing ? "none" : "auto",
-                }}
+                className="btn-yoquet w-full justify-center mt-4"
               >
-                {processing ? "Procesando…" : "Confirmar compra"}
+                {processing ? "Procesando…" : "Confirmar pedido"}
               </button>
-
-              <div className="md:col-span-2 text-center text-xs" style={{ color: "var(--muted)" }}>
-                Al confirmar, se genera tu pedido y te redirigimos a “Empaquetando”.
-              </div>
             </form>
           </div>
 
-          {/* RESUMEN */}
-          <aside className="card-yoquet p-5 sm:p-6 h-fit">
-            <div className="text-sm font-extrabold" style={{ color: "var(--muted)" }}>
+          {/* Resumen */}
+          <div className="card-yoquet p-5 sm:p-6 h-fit">
+            <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
               Resumen
+            </h2>
+
+            <div className="mt-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "var(--text-secondary)" }}>Artículos</span>
+                <span className="font-medium" style={{ color: "var(--text-primary)" }}>{totalItems}</span>
+              </div>
+              
+              <div className="h-px" style={{ background: "var(--border-soft)" }} />
+              
+              <div className="flex justify-between">
+                <span className="font-medium" style={{ color: "var(--text-primary)" }}>Total</span>
+                <span className="text-xl font-semibold" style={{ color: "var(--color-rosa)" }}>
+                  ${total.toFixed(2)}
+                </span>
+              </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm font-extrabold" style={{ color: "var(--text)" }}>
-                Artículos
-              </div>
-              <div className="text-sm font-extrabold" style={{ color: "var(--text)" }}>
-                {totalItems}
-              </div>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between">
-              <div className="text-sm font-extrabold" style={{ color: "var(--text)" }}>
-                Total
-              </div>
-              <div className="text-2xl font-extrabold" style={{ color: "var(--color-rosa)" }}>
-                ${total.toFixed(2)}
-              </div>
-            </div>
-
-            <div
-              className="mt-4 p-4 rounded-3xl text-xs font-bold"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255,102,179,0.10), rgba(255,216,90,0.10), rgba(66,226,184,0.10))",
-                border: "1px solid rgba(61,43,31,0.10)",
-                color: "var(--muted)",
-              }}
+            <button 
+              className="btn-yoquet-ghost w-full mt-6" 
+              onClick={() => navigate("/carrito")}
             >
-              Tip: revisá el carrito antes de confirmar para evitar duplicados.
-            </div>
-
-            <button className="btn-yoquet-ghost w-full mt-5" onClick={() => navigate("/carrito")}>
               Editar carrito
             </button>
-          </aside>
+          </div>
         </div>
       </section>
     </main>

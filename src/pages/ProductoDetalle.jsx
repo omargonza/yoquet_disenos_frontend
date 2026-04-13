@@ -50,7 +50,7 @@ export default function ProductoDetalle() {
         localStorage.setItem(cacheKey, JSON.stringify(res.data));
       })
       .catch(() => {
-        if (!cached) setError("Sin conexión. Producto no disponible.");
+        if (!cached) setError("Producto no disponible");
       });
 
     return () => (mounted = false);
@@ -60,33 +60,37 @@ export default function ProductoDetalle() {
     if (!producto) return;
     agregarAlCarrito(producto);
     setAgregado(true);
-    setTimeout(() => setAgregado(false), 900);
+    setTimeout(() => setAgregado(false), 1500);
   }, [producto, agregarAlCarrito]);
 
   if (error) {
     return (
-      <div className="container-yoquet py-12">
-        <div className="card-yoquet p-6">
-          <p className="font-extrabold" style={{ color: "var(--text)" }}>
-            {error}
-          </p>
-          <button className="btn-yoquet-ghost mt-5" onClick={() => navigate("/productos")}>
-            Volver al catálogo
-          </button>
-        </div>
-      </div>
+      <main className="min-h-[calc(100vh-72px)]">
+        <section className="container-yoquet py-10">
+          <div className="card-yoquet p-6">
+            <p className="font-semibold" style={{ color: "var(--text-secondary)" }}>
+              {error}
+            </p>
+            <button className="btn-yoquet-ghost mt-4" onClick={() => navigate("/productos")}>
+              Volver al catálogo
+            </button>
+          </div>
+        </section>
+      </main>
     );
   }
 
   if (!producto) {
     return (
-      <div className="container-yoquet py-12">
-        <div className="card-yoquet p-6">
-          <div className="skeleton h-7 w-56" />
-          <div className="skeleton h-4 w-72 mt-3" />
-          <div className="skeleton h-10 w-40 mt-6 rounded-full" />
-        </div>
-      </div>
+      <main className="min-h-[calc(100vh-72px)]">
+        <section className="container-yoquet py-10">
+          <div className="card-yoquet p-6">
+            <div className="skeleton h-6 w-56" />
+            <div className="skeleton h-4 w-full mt-3 max-w-md" />
+            <div className="skeleton h-10 w-32 mt-6 rounded-lg" />
+          </div>
+        </section>
+      </main>
     );
   }
 
@@ -94,66 +98,73 @@ export default function ProductoDetalle() {
 
   return (
     <main className="min-h-[calc(100vh-72px)]">
-      <section className="container-yoquet pt-8 pb-12">
+      <section className="container-yoquet pt-6 pb-12">
+        {/* Botón volver */}
+        <button 
+          onClick={() => navigate("/productos")} 
+          className="btn-yoquet-ghost mb-4 text-sm"
+        >
+          ← Volver al catálogo
+        </button>
+
         <div className="card-yoquet overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-            {/* Imagen */}
-            <div className="bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Imagen - protagonista */}
+            <div className="bg-white flex items-center justify-center" style={{ background: "var(--surface-soft)" }}>
               <img
                 src={imgSrc}
                 alt={sanitizeText(producto.nombre)}
-                className="w-full h-[360px] md:h-full object-cover"
+                className="w-full h-[300px] md:h-[500px] object-cover"
                 loading="eager"
                 decoding="async"
                 onError={(e) => (e.currentTarget.src = "/fallback.webp")}
               />
             </div>
 
-            {/* Info */}
-            <div className="p-6 sm:p-8">
+            {/* Info - limpio y estructurado */}
+            <div className="p-6 sm:p-8 flex flex-col">
               {offline && (
-                <div className="text-xs font-extrabold mb-3" style={{ color: "var(--muted)" }}>
-                  Modo offline — datos desde caché
+                <div 
+                  className="inline-block text-xs font-medium mb-4 px-2 py-1 rounded" 
+                  style={{ 
+                    background: "var(--surface-soft)", 
+                    color: "var(--text-secondary)",
+                    width: "fit-content"
+                  }}
+                >
+                  Modo offline
                 </div>
               )}
 
-              <h1 className="text-3xl sm:text-4xl font-extrabold" style={{ color: "var(--text)" }}>
-                <span
-                  style={{
-                    background:
-                      "linear-gradient(90deg, var(--color-rosa), var(--color-dorado), var(--color-turquesa))",
-                    WebkitBackgroundClip: "text",
-                    color: "transparent",
-                  }}
-                >
-                  {sanitizeText(producto.nombre)}
-                </span>
+              {/* Categoría */}
+              <div className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-secondary)" }}>
+                {sanitizeText(producto.categoria?.nombre || "Producto")}
+              </div>
+
+              {/* Título */}
+              <h1 className="text-2xl sm:text-3xl font-semibold mt-1" style={{ color: "var(--text-primary)" }}>
+                {sanitizeText(producto.nombre)}
               </h1>
 
-              <p className="mt-2 text-sm font-bold" style={{ color: "var(--muted)" }}>
-                {sanitizeText(producto.categoria?.nombre || "Sin categoría")}
-              </p>
-
-              <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text)", fontWeight: 600, opacity: 0.9 }}>
+              {/* Descripción */}
+              <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                 {sanitizeText(producto.descripcion)}
               </p>
 
-              <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
-                <div className="text-3xl font-extrabold" style={{ color: "var(--text)" }}>
+              <div className="flex-1" />
+
+              {/* Precio y CTA */}
+              <div className="mt-6 space-y-4">
+                <div className="text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
                   ${producto.precio}
                 </div>
 
-                <button className="btn-yoquet" disabled={agregado} onClick={handleAdd}>
-                  {agregado ? "Agregado ✔" : "Agregar al carrito"}
-                </button>
-              </div>
-
-              <div className="mt-7 flex gap-3 flex-wrap">
-                <button className="btn-yoquet-ghost" onClick={() => navigate("/productos")}>
-                  ← Volver
-                </button>
-                <button className="btn-yoquet-ghost" onClick={() => navigate("/carrito")}>
-                  Ir al carrito
+                <button 
+                  className="btn-yoquet w-full justify-center" 
+                  disabled={agregado} 
+                  onClick={handleAdd}
+                >
+                  {agregado ? "Agregado ✓" : "Agregar al carrito"}
                 </button>
               </div>
             </div>
