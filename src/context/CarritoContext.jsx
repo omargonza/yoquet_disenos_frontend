@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const CARRITO_VERSION = "2.0";
+
 const CarritoContext = createContext();
 
 export function CarritoProvider({ children }) {
@@ -8,6 +10,15 @@ export function CarritoProvider({ children }) {
   const [justAdded, setJustAdded] = useState(false);
 
   useEffect(() => {
+    // Limpieza automática si cambia la versión del carrito
+    const savedVersion = localStorage.getItem("carrito_version");
+    if (savedVersion !== CARRITO_VERSION) {
+      localStorage.removeItem("carrito");
+      localStorage.setItem("carrito_version", CARRITO_VERSION);
+      setCarrito([]);
+      return;
+    }
+
     const guardado = localStorage.getItem("carrito");
     if (guardado) {
       try {
