@@ -161,14 +161,7 @@ export default function App() {
               <Route path="/carrito" element={<Carrito />} />
 
               {/* CHECKOUT */}
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/confirmacion" element={<Confirmacion />} />
               <Route path="/empaquetando" element={<Empaquetando />} />
               <Route path="/despedida" element={<Despedida />} />
